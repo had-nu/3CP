@@ -1,0 +1,56 @@
+;; 3CP Block Structure (CBOR)
+;; CDDL — RFC 8610
+;; Integer keys in canonical (ascending) order.
+
+block = {
+  0 => uint64,                     ; Index
+  1 => bytes .size 32,             ; PrevHash (BLAKE3-256)
+  2 => bytes .size 32,             ; StateRoot (SMT root)
+  3 => bytes .size 16,             ; Proposer (RootID)
+  4 => [3 * bytes],                ; Triad (reserved)
+  5 => [* provenance-entry],       ; Anchored entries
+  6 => float64,                    ; Lambda1 (Laplacian eigenvalue)
+  7 => int64,                      ; Timestamp (UnixNano)
+  8 => [* bytes .size 2700],       ; Sigs (Dilithium3 signatures)
+  9 => [* bytes .size 1952],       ; Validators (Dilithium3 public keys)
+  10 => quorum-config,             ; Quorum
+  11 => bytes .size 32,            ; BlockHash (SHA-256)
+}
+
+provenance-entry = {
+  0 => bytes .size 32,             ; Hash (anchored artifact hash)
+  1 => bytes,                      ; Submitter (RootID or caller)
+  2 => int64,                      ; Timestamp (UnixNano)
+  3 => tstr,                       ; Label
+  ? 4 => bytes,                    ; Approver (RootID)
+  ? 5 => bytes .size 32,           ; Reference (related entry hash)
+  ? 6 => bytes .size 2700,         ; Signature (Dilithium3)
+}
+
+quorum-config = {
+  0 => int,                        ; TotalValidators
+  1 => int,                        ; RequiredSigs
+}
+
+uid0-identity = {
+  0 => bytes .size 16,             ; RootID
+  1 => bytes .size 16,             ; FEntropy
+  ? 2 => bytes,                    ; GenesisHash
+  ? 3 => [* bytes],                ; FounderMerkleProofs
+  ? 4 => bytes,                    ; SigRecovery
+  ? 5 => bytes,                    ; SigUpdate
+  ? 6 => bytes,                    ; SigAudit
+  ? 7 => uint64,                   ; ReputationSum
+  ? 8 => tstr,                     ; SiderealTime
+  ? 9 => uint64,                   ; CycleIndex
+  ? 10 => int64,                   ; GeneratedAt
+  ? 11 => bytes .size 32,          ; MerkleRoot
+  ? 12 => [* bytes],               ; MerkleProof
+  ? 13 => bool,                    ; Simulated
+  14 => bytes .size 32,            ; FinalDigest
+  15 => bytes .size 1952,          ; PublicKey (Dilithium3)
+  16 => bytes,                     ; SecretKey (MUST NOT be transmitted)
+  ? 17 => bytes,                   ; ContractHash
+  18 => bytes .size 32,            ; VRFPublicKey
+  19 => bytes .size 32,            ; VRFSecretKey (MUST NOT be transmitted)
+}

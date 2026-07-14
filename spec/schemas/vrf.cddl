@@ -1,0 +1,8 @@
+;; 3CP ECVRF VRFProof
+;; RFC 9381 — Ristretto255 ECVRF
+;; Serialized as 96 contiguous bytes
+
+vrf-proof = bytes .size 96
+; Offset 0-31:  Gamma (Ristretto255 point, 32 bytes)
+; Offset 32-63: C (Fiat-Shamir challenge scalar, 32 bytes)
+; Offset 64-95: S (Schnorr response scalar, 32 bytes)

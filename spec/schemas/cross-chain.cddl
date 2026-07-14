@@ -1,0 +1,12 @@
+;; 3CP Cross-Chain Proof
+;; Dual-Merkle proof linking a sub-chain entry to the parent chain
+
+cross-chain-proof = {
+  entry-hash:     bytes .size 32,   ; Entry hash in sub-chain
+  subchain-root:  bytes .size 32,   ; Sub-chain SMT root at anchor time
+  subchain-proof: bytes,            ; SMT proof within sub-chain
+  anchor-hash:    bytes .size 32,   ; Anchor entry hash in parent chain
+  anchor-block:   uint64,           ; Block index of anchor in parent chain
+  parent-root:    bytes .size 32,   ; Parent chain SMT root at anchor time
+  parent-proof:   bytes,            ; SMT proof within parent chain
+}

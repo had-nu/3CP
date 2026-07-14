@@ -1,0 +1,8 @@
+;; 3CP Sparse Merkle Tree Proof
+;; Blake3-256, depth 256
+;; Serialized as sibling hashes concatenated (256 * 32 = 8192 bytes)
+
+smt-proof = bytes .size 8192
+; Each sibling: BLAKE3-256 hash (32 bytes)
+; Order: leaf-to-root sibling traversal
+; Empty tree: all siblings = BLAKE3("")
