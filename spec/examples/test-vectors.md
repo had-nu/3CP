@@ -186,6 +186,83 @@ CrossChainProof {
 
 ---
 
+## 6. MandateEntry (Example — CRA-Compliant Policy)
+
+```
+MandateEntry {
+  MandateID:    6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7
+  Authority:    4e4f44453030312d2d2d2d2d2d2d2d2d ("NODE001---------")
+  Version:      1
+  PrevVersion:  0000000000000000000000000000000000000000000000000000000000000000
+  ValidFrom:    1784030400000000000
+  ValidUntil:   0                                         (never expires)
+  Supersedes:   0000000000000000000000000000000000000000000000000000000000000000
+  Rules:        [2 rules]
+    [0]:
+      EventClass:         "release_gate"
+      Description:        "CRA Article 14 — critical severity releases MUST be anchored"
+      SeverityMin:        9.0
+      SeverityMax:        10.0
+      AssetCriticalityMin: 3
+      RegulatoryScope:    ["CRA"]
+      Mandatory:          true
+      RequiredFields:     ["Approver", "Signature", "Reference"]
+      MaxDeferralSec:     0
+    [1]:
+      EventClass:         "exception_grant"
+      Description:        "All risk acceptances MUST be anchored with justification"
+      SeverityMin:        0.0
+      SeverityMax:        10.0
+      AssetCriticalityMin: 1
+      RegulatoryScope:    []
+      Mandatory:          true
+      RequiredFields:     ["Approver", "Signature"]
+      MaxDeferralSec:     0
+  PolicyHash:   b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b
+  PolicyURI:    "https://example.com/policies/cra-release-gate-v1.pdf"
+  Signature:    [2700-byte Dilithium3 signature]
+}
+```
+
+### MandateID Computation
+
+```
+MandateID = BLAKE3-256(canonicalCBOR(MandateEntry without Signature field))
+```
+
+The MandateID is the content-addressed identifier. Any party recomputing it from
+the same fields obtains the same hash, which is then anchored as a
+`ProvenanceEntry.Hash`.
+
+### Active Period
+
+```
+ValidFrom (1784030400000000000 UnixNano) corresponds to:
+  Date: 2026-07-14T00:00:00Z
+
+ValidUntil == 0 means the mandate does not expire.
+```
+
+### Submission as ProvenanceEntry
+
+When submitted via `SubmitMandate`, the `ProvenanceEntry` would be:
+
+```
+ProvenanceEntry {
+  Hash:      a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b
+             (= BLAKE3-256 of canonical MandateEntry CBOR excluding Signature)
+  Submitter: 4e4f44453030312d2d2d2d2d2d2d2d2d
+  Timestamp: 1784030400000000000
+  Label:     "3cp:mandate:v1"
+  Approver:  4e4f44453030312d2d2d2d2d2d2d2d2d
+  Reference: (absent)
+  Signature: 4e4f... (same Dilithium3 signature as MandateEntry.Signature)
+  MandateRef: (absent — mandates are self-referential)
+}
+```
+
+---
+
 ## Conformance Notes
 
 - All SHA-256 hashes above are computed with Go's `crypto/sha256`.

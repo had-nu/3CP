@@ -8,6 +8,12 @@ becomes part of an immutable block and can be verified by any third party.
 **AnchorProof** — A structure containing the SMT proof, block index, and block
 timestamp for a given entry. Produced by `WaitForAnchor` or `VerifyHash`.
 
+**Anchoring policy** — A set of rules, external to the protocol, that declares
+which events an organisation requires to be recorded in the 3CP chain. 3CP does
+not define anchoring policy; it provides the `Mandate` mechanism
+(see [Mandate]) for anchoring the policy itself as a signed, versioned,
+verifiable record.
+
 **Application-layer protocol** — A protocol that operates at the application
 layer of the OSI model, equivalent to HTTP, DNS, or SMTP. 3CP is an
 application-layer protocol, not a platform or blockchain.
@@ -26,6 +32,10 @@ preimage of the block's fields. Used for chain linking and signature targets.
 **Canonical CBOR** — Deterministic CBOR encoding as specified by CDDL. Integer
 keys in ascending order, smallest integer representation, definite-length
 strings.
+
+**Compliance gap** — An event that should exist in the chain per an active
+mandate but does not, or exists without the required fields (see [Mandate]).
+Detected by comparing the mandate's rules against the chain at verification time.
 
 **Chain-of-custody** — The chronological documentation of the sequence of
 custody, control, transfer, analysis, and disposition of digital evidence. 3CP
@@ -82,6 +92,17 @@ Values below `MinLambda1` indicate possible network fragmentation.
 
 ## M
 
+**Mandate** — A signed, versioned, anchored declaration defining which event
+classes require anchoring under which conditions. A Mandate is itself a
+`ProvenanceEntry` with a special label and a `MandateEntry` CBOR payload.
+Mandates are the protocol-native mechanism for making anchoring obligations
+verifiable by independent third parties. See [§13](3CP.md#13-mandates).
+
+**Mandatory event** — An event whose absence from the chain constitutes a
+detectable compliance gap (as opposed to a voluntary event, whose absence
+carries no protocol-level implication). Mandatory status is declared by an
+active `Mandate` rule with `mandatory: true`.
+
 **M-of-N quorum** — A configurable threshold of validators required to finalize
 a block. For example, `3/5` means 3 out of 5 validators must co-sign.
 
@@ -97,8 +118,8 @@ block-level and entry-level payloads.
 block. Selected as the peer with the lowest VRF Gamma output.
 
 **ProvenanceEntry** — A single anchored record containing a hash, submitter
-identity, timestamp, optional label, optional approver, optional reference, and
-optional per-entry signature.
+identity, timestamp, optional label, optional approver, optional reference,
+optional per-entry signature, and optional mandate reference (see [Mandate]).
 
 ## Q
 

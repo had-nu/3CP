@@ -1,0 +1,48 @@
+;; 3CP Mandate Structure (CBOR)
+;; CDDL — RFC 8610
+;; Integer keys in canonical (ascending) order.
+
+mandate-entry = {
+  0 => bytes .size 32,             ; MandateID (BLAKE3-256 of canonical CBOR excluding signature)
+  1 => bytes .size 16,             ; Authority (RootID who issued this mandate)
+  2 => uint64,                     ; Version (increments on each revision)
+  3 => bytes .size 32,             ; PrevVersion (all zeros for first version; hash of prior mandate)
+  4 => int64,                      ; ValidFrom (UnixNano)
+  5 => int64,                      ; ValidUntil (UnixNano; 0 = never expires)
+  6 => bytes .size 32,             ; Supersedes (all zeros if no prior mandate)
+  7 => [* rule],                   ; Rules
+  8 => bytes .size 32,             ; PolicyHash (BLAKE3-256 of the anchoring policy document)
+  9 => bytes,                      ; PolicyURI (URI string to the full policy text; OPTIONAL)
+  10 => bytes .size 2700,          ; Signature (Dilithium3 from Authority over canonical CBOR excluding this field)
+}
+
+rule = {
+  0 => tstr,                       ; EventClass (e.g. "release_gate", "exception_grant", "incident_classification")
+  1 => tstr,                       ; Description (human-readable)
+  2 => float64,                    ; SeverityMin (CVSS or equivalent; 0.0 = any)
+  3 => float64,                    ; SeverityMax (CVSS or equivalent; 10.0 = any)
+  4 => uint,                       ; AssetCriticalityMin (1-5 scale; 1 = lowest)
+  5 => [* tstr],                   ; RegulatoryScope (e.g. ["CRA"], ["NIS2","DORA"])
+  6 => bool,                       ; Mandatory (true = anchoring required; false = recommended)
+  7 => [* tstr],                   ; RequiredFields (e.g. ["Approver", "Signature", "Reference"])
+  8 => uint64,                     ; MaxDeferralSec (maximum seconds before anchoring is required; 0 = immediate)
+}
+
+compliance-verification = {
+  0 => bytes .size 32,             ; MandateID being verified against
+  1 => int64,                      ; WindowStart (UnixNano, start of compliance window)
+  2 => int64,                      ; WindowEnd (UnixNano, end of compliance window)
+  3 => uint,                       ; TotalExpected (number of events expected per mandate rules)
+  4 => uint,                       ; TotalAnchored (number of matching entries found in chain)
+  5 => [* compliance-gap],         ; Gaps detected
+}
+
+compliance-gap = {
+  0 => bytes .size 32,             ; MandateID
+  1 => uint,                       ; RuleIndex (index into mandate-entry.rules)
+  2 => tstr,                       ; EventClass
+  3 => int64,                      ; ExpectedWindowStart
+  4 => int64,                      ; ExpectedWindowEnd
+  5 => "anchored" / "missing" / "missing_fields",
+  6 => tstr,                       ; Details
+}

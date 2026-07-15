@@ -26,6 +26,11 @@ retroactive reconstruction of events is possible without detection.
 
 > Accountability cannot depend on the good faith of the audited entity.
 
+3CP extends this principle with **Mandatory Event Anchoring** (§13): signed,
+versioned, protocol-native declarations that define which events MUST be
+recorded. Compliance is independently verifiable by comparing the chain against
+the active mandate set. Omission becomes detectable.
+
 Existing compliance frameworks (ISO 27001, SOC 2, NIST CSF, DORA, CRA) assume
 that organisations produce evidence honestly and that auditors can evaluate it.
 When legal liability and economic interest conflict, there is an objective
@@ -44,23 +49,25 @@ contestable evidence of decision provenance.
 ## Key Properties
 
 | Property | What it means |
-|---|---|
+|---|---|---|
 | **Contestability** | Evidence can be challenged, but the challenge occurs over the intact chain, not over a chain reconstructed after the incident |
 | **Third-party verifiability** | Any party with the public chain can independently verify SMT proofs, signatures, and block hashes without contacting the producing network |
 | **Non-repudiation** | Each entry is cryptographically bound to the submitting identity via Dilithium3 signatures; once quorum-validated, no party can deny the submission |
 | **Epistemic preservation** | The system records who knew what, when, who approved, who signed, who altered — the epistemology of the incident, not just hashes |
 | **Post-quantum security** | Dilithium3 signatures, Kyber1024 KEM, ECVRF (Ristretto255) — NIST-standardized post-quantum cryptography throughout |
+| **Mandatory anchoring** | Protocol-native Mandate declarations (§13) make anchoring obligations independently verifiable; compliance gaps (missing entries, missing fields) are cryptographically detectable by any third party |
 
 ## Protocol Stack
 
 | Layer | Specification |
-|---|---|
+|---|---|---|
 | Wire format | Canonical CBOR (integer-keyed, deterministic) — see [`spec/3CP.md`](spec/3CP.md) §4 |
 | Consensus | ECVRF leader election (RFC 9381) + M-of-N Dilithium3 quorum — §6 |
 | State | Sparse Merkle Tree (Blake3, depth 256) — §5 |
 | Transport (canonical) | gRPC over Protocol Buffers — §7 |
 | Sub-chains | Per-service SMT + cross-chain anchors — §9 |
 | Identity | UID0 soulbound tokens with contract-derived binding — §8 |
+| Mandates | Signed, versioned, anchored declarations of anchoring obligations — §13 |
 
 ## Repository Structure
 

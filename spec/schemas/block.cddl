@@ -25,6 +25,33 @@ provenance-entry = {
   ? 4 => bytes,                    ; Approver (RootID)
   ? 5 => bytes .size 32,           ; Reference (related entry hash)
   ? 6 => bytes .size 2700,         ; Signature (Dilithium3)
+  ? 7 => bytes .size 32,           ; MandateRef (hash of MandateEntry, §4.4)
+}
+
+mandate-entry = {
+  0 => bytes .size 32,             ; MandateID (BLAKE3-256 of canonical CBOR excluding signature)
+  1 => bytes .size 16,             ; Authority (RootID)
+  2 => uint64,                     ; Version
+  3 => bytes .size 32,             ; PrevVersion (zeros for first version)
+  4 => int64,                      ; ValidFrom (UnixNano)
+  5 => int64,                      ; ValidUntil (UnixNano; 0 = never expires)
+  6 => bytes .size 32,             ; Supersedes (zeros if no prior mandate)
+  7 => [* rule],                   ; Rules
+  8 => bytes .size 32,             ; PolicyHash
+  ? 9 => tstr,                     ; PolicyURI
+  10 => bytes .size 2700,          ; Signature (Dilithium3 from Authority)
+}
+
+rule = {
+  0 => tstr,                       ; EventClass
+  1 => tstr,                       ; Description
+  2 => float64,                    ; SeverityMin (0.0 = any)
+  3 => float64,                    ; SeverityMax (10.0 = any)
+  4 => uint,                       ; AssetCriticalityMin (1-5)
+  5 => [* tstr],                   ; RegulatoryScope
+  6 => bool,                       ; Mandatory
+  7 => [* tstr],                   ; RequiredFields
+  8 => uint64,                     ; MaxDeferralSec
 }
 
 quorum-config = {
