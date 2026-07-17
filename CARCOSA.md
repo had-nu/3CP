@@ -1,5 +1,21 @@
 # CARCOSA — Camada de Auditoria com Prova Zero-Knowledge Acoplada ao 3CP
 
+## Relação com o 3CP
+
+Este repositório (`had-nu/3CP`) contém a **especificação do protocolo 3CP**.
+Há dois artefatos que a implementam ou estendem:
+
+| Artefato | Papel | O que faz |
+|----------|-------|-----------|
+| **Gleipnir** | Implementação de referência do 3CP | Go. Implementa o protocolo 3CP conforme a spec — consenso, SMT, gRPC, Dilithium3. A suíte de 33 testes valida conformidade na fronteira gRPC |
+| **CARCOSA** | Framework de auditoria ZK **sobre** o 3CP | Rust. **Não implementa o 3CP.** Consome a camada de ancoragem do Gleipnir (via gRPC) para adicionar provas de conhecimento-zero (STARK/Winterfell) a fluxos de auditoria. É uma camada *acoplada* ao 3CP, não uma implementação alternativa |
+
+Em suma:
+
+- **3CP** define *como* ancorar evidências com integridade verificável por terceiros
+- **Gleipnir** realiza o 3CP — é a rede que aceita submissões, forma consenso e produz blocos
+- **CARCOSA** usa o Gleipnir como *camada de âncora* para selar provas ZK na chain, mantendo a privacidade dos aprovadores sem abrir mão da detecção de omissão
+
 ## 1. Objetivo
 
 Demonstrar que **3CP + Mandato + ZK** resolve o trilema auditoria vs privacidade vs deteccao de omissao:

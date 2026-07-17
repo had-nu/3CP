@@ -74,7 +74,10 @@ contestable evidence of decision provenance.
 ```
 3CP/
 ├── README.md            ← this file
+├── README.pt-BR.md      ← Portuguese version
 ├── CONTRIBUTING.md      ← how to propose changes
+├── CARCOSA.md           ← ZK audit framework coupled to 3CP
+├── PLAYBOOK.md          ← intern onboarding playbook
 ├── LICENSE              ← All Rights Reserved (pre-publication)
 ├── spec/
 │   ├── 3CP.md           ← normative protocol specification (RFC 2119)
@@ -98,6 +101,18 @@ contestable evidence of decision provenance.
 [github.com/had-nu/gleipnir](https://github.com/had-nu/gleipnir) under AGPL-3.0.
 The Gleipnir conformance test suite (33 tests) validates the protocol at the
 gRPC boundary.
+
+## CARCOSA — Coupled ZK Audit Framework
+
+**CARCOSA** (`CARCOSA.md`) is a zero-knowledge audit framework that couples to
+3CP. Unlike Gleipnir — which **implements** the protocol — CARCOSA **consumes**
+the 3CP anchoring layer (via gRPC) to seal STARK proofs on-chain, preserving
+approver privacy without losing the omission detection guaranteed by 3CP
+Mandates.
+
+```
+3CP (protocol) ← Gleipnir (implements) ← CARCOSA (consumes)
+```
 
 ## Citation (pre-publication)
 

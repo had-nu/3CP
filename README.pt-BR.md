@@ -76,9 +76,11 @@ contestáveis de proveniência de decisões.
 
 ```
 3CP/
-├── README.md            ← este arquivo
-├── README.pt-BR.md      ← versão em português
+├── README.md            ← versão original em inglês
+├── README.pt-BR.md      ← versão em português (este arquivo)
 ├── CONTRIBUTING.md      ← como propor alterações
+├── CARCOSA.md           ← framework de auditoria ZK acoplado ao 3CP
+├── PLAYBOOK.md          ← guia prático para integrar com Gleipnir
 ├── LICENSE              ← Todos os Direitos Reservados (pré-publicação)
 ├── spec/
 │   ├── 3CP.md           ← especificação normativa do protocolo (RFC 2119)
@@ -103,6 +105,18 @@ contestáveis de proveniência de decisões.
 Disponível em [github.com/had-nu/gleipnir](https://github.com/had-nu/gleipnir)
 sob AGPL-3.0. A suíte de testes de conformidade do Gleipnir (33 testes)
 valida o protocolo na fronteira gRPC.
+
+## CARCOSA — Auditoria ZK Acoplada
+
+**CARCOSA** (`CARCOSA.md`) é um *framework* de auditoria com prova zero-knowledge
+que se acopla ao 3CP. Diferente do Gleipnir — que **implementa** o protocolo —
+o CARCOSA **consome** a camada de ancoragem do 3CP (via gRPC) para selar provas
+STARK na chain, preservando a privacidade dos aprovadores sem perder a
+detecção de omissão garantida pelos Mandatos 3CP.
+
+```
+3CP (protocolo) ← Gleipnir (implementa) ← CARCOSA (consome)
+```
 
 ## Citação (pré-publicação)
 
