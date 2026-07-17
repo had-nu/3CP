@@ -49,7 +49,7 @@ contestable evidence of decision provenance.
 ## Key Properties
 
 | Property | What it means |
-|---|---|---|
+|---|---|
 | **Contestability** | Evidence can be challenged, but the challenge occurs over the intact chain, not over a chain reconstructed after the incident |
 | **Third-party verifiability** | Any party with the public chain can independently verify SMT proofs, signatures, and block hashes without contacting the producing network |
 | **Non-repudiation** | Each entry is cryptographically bound to the submitting identity via Dilithium3 signatures; once quorum-validated, no party can deny the submission |
@@ -60,7 +60,7 @@ contestable evidence of decision provenance.
 ## Protocol Stack
 
 | Layer | Specification |
-|---|---|---|
+|---|---|
 | Wire format | Canonical CBOR (integer-keyed, deterministic) — see [`spec/3CP.md`](spec/3CP.md) §4 |
 | Consensus | ECVRF leader election (RFC 9381) + M-of-N Dilithium3 quorum — §6 |
 | State | Sparse Merkle Tree (Blake3, depth 256) — §5 |
