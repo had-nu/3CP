@@ -8,8 +8,8 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/status-draft-yellow" alt="Status: Rascunho">
-  <img src="https://img.shields.io/badge/protocol--version-v1-blue" alt="Versão do Protocolo: v1">
-  <img src="https://img.shields.io/badge/conformance-33%2F33%20passing-brightgreen" alt="Conformidade: 33/33">
+  <img src="https://img.shields.io/badge/protocol--version-v2-blue" alt="Versão do Protocolo: v2">
+  <img src="https://img.shields.io/badge/conformance-extended%20suite-brightgreen" alt="Conformidade: Suite Estendida">
   <img src="https://img.shields.io/badge/pre--publication-private-red" alt="Pré-publicação: Privado">
 </p>
 
@@ -27,7 +27,7 @@ possível sem detecção.
 
 > A responsabilização não pode depender da boa-fé da entidade auditada.
 
-O 3CP estende este princípio com **Mandatory Event Anchoring** (§13):
+O 3CP estende este princípio com **Ancoragem Obrigatória de Eventos** (§13):
 declarações assinadas, versionadas e nativas do protocolo que definem quais
 eventos DEVEM ser registrados. A conformidade é verificável de forma
 independente ao comparar a cadeia contra o conjunto de mandatos ativo. A
@@ -64,59 +64,79 @@ contestáveis de proveniência de decisões.
 
 | Camada | Especificação |
 |---|---|
-| Formato de transmissão | CBOR canônico (chaveado por inteiro, determinístico) — veja [`spec/3CP.md`](spec/3CP.md) §4 |
-| Consenso | Eleição de líder ECVRF (RFC 9381) + quórum M-de-N Dilithium3 — §6 |
-| Estado | Árvore Merkle Esparsa (Blake3, profundidade 256) — §5 |
+| Formato de transmissão | CBOR canônico (chaveado por inteiro, determinístico) — veja [`spec/SPEC-3CP-V2.md`](spec/SPEC-3CP-V2.md) §5 |
+| Consenso | BFT em duas fases (PREPARE/COMMIT) com eleição de líder ECVRF + quórum `ceil(2N/3)` Dilithium3 — §6 |
+| Estado | Árvore Merkle Esparsa (BLAKE3, profundidade 256) — §9 |
 | Transporte (canônico) | gRPC sobre Protocol Buffers — §7 |
 | Sub-cadeias | SMT por serviço + âncoras entre cadeias — §9 |
-| Identidade | Tokens soulbound UID0 com vinculação derivada de contrato — §8 |
+| Identidade | Tokens soulbound UID0 com vinculação derivada de contrato — §14 |
 | Mandatos | Declarações assinadas, versionadas e ancoradas de obrigações de ancoragem — §13 |
+| Rotação de Chaves | Entradas nativas `3cp:key-rotation:v1` — §8 |
+| Verificabilidade | Protocolo Light Client + Anchor Publishers — §12 |
+
+## Especificação
+
+O diretório `spec/` contém a definição normativa do protocolo:
+
+- `SPEC-3CP-V2.md` — Especificação normativa atual (v2.0)
+- `3CP.md` — Especificação histórica v1.0 (preservada para referência)
+- `glossary.md` — Terminologia unificada
+- `schemas/` — Schemas CDDL para todas as estruturas de dados do protocolo
+- `notes/` — Documentos explicativos sobre decisões de design do protocolo
+- `examples/` — Vetores de teste e fixtures de conformidade
+
+## Implementações
+
+3CP é uma especificação de protocolo. Implementações de referência são mantidas em
+repositórios separados:
+
+- **Gleipnir** (Go) — Implementação de referência do nó 3CP. Disponível em
+  [github.com/had-nu/gleipnir](https://github.com/had-nu/gleipnir) sob AGPL-3.0.
+- **CARCOSA** (Rust) — Framework de auditoria ZK consumindo a camada de ancoragem 3CP. Disponível em
+  [github.com/had-nu/carcosa](https://github.com/had-nu/carcosa).
+
+Estes repositórios **não fazem parte deste repositório de especificação**.
+
+```
+3CP (protocolo) ← Gleipnir (implementa) ← CARCOSA (consome)
+```
+
+## Conformidade
+
+Implementações alegando conformidade com 3CP v2.0 devem passar pela suíte de
+testes estendida definida em `spec/examples/` e `spec/notes/`, incluindo:
+
+- 12+ casos de teste BFT adversariais (TC-BFT-01 até TC-MEM-01 por §15)
+- Vetores de rotação de chaves (`test-vectors-key-rotation.md`)
+- Vetores de verificação light client (`test-vectors-light-client.md`)
 
 ## Estrutura do Repositório
 
 ```
 3CP/
-├── README.md            ← versão original em inglês
-├── README.pt-BR.md      ← versão em português (este arquivo)
+├── README.md            ← este arquivo (inglês)
+├── README.pt-BR.md      ← versão em português
 ├── CONTRIBUTING.md      ← como propor alterações
-├── CARCOSA.md           ← framework de auditoria ZK acoplado ao 3CP
 ├── PLAYBOOK.md          ← guia prático para integrar com Gleipnir
 ├── LICENSE              ← Todos os Direitos Reservados (pré-publicação)
 ├── spec/
-│   ├── 3CP.md           ← especificação normativa do protocolo (RFC 2119)
-│   ├── glossary.md       ← terminologia
-│   ├── schemas/          ← definições de formato CDDL
-│   └── examples/         ← vetores de teste
+│   ├── SPEC-3CP-V2.md   ← especificação normativa do protocolo v2.0 (RFC 2119)
+│   ├── 3CP.md           ← especificação histórica v1.0
+│   ├── glossary.md      ← terminologia
+│   ├── schemas/         ← definições de formato CDDL
+│   ├── notes/           ← notas explicativas
+│   └── examples/        ← vetores de teste
 ```
 
 ## Status
 
 - **Rascunho** — a especificação está completa e validada por uma suíte de
-  conformidade de 33 testes contra a implementação de referência.
+  conformidade estendida contra a implementação de referência.
 - **Pré-publicação** — este repositório é privado. A especificação será
   aberta junto com o artigo acadêmico correspondente.
-- **Versão do protocolo**: v1 — formato de transmissão estável. Versões
+- **Versão do protocolo**: v2.0 — formato de transmissão estável. Versões
   futuras serão compatíveis com versões anteriores ou explicitamente
   versionadas.
-
-## Implementação de Referência
-
-**Gleipnir** — uma implementação de referência em Go do protocolo 3CP.
-Disponível em [github.com/had-nu/gleipnir](https://github.com/had-nu/gleipnir)
-sob AGPL-3.0. A suíte de testes de conformidade do Gleipnir (33 testes)
-valida o protocolo na fronteira gRPC.
-
-## CARCOSA — Auditoria ZK Acoplada
-
-**CARCOSA** (`CARCOSA.md`) é um *framework* de auditoria com prova zero-knowledge
-que se acopla ao 3CP. Diferente do Gleipnir — que **implementa** o protocolo —
-o CARCOSA **consome** a camada de ancoragem do 3CP (via gRPC) para selar provas
-STARK na chain, preservando a privacidade dos aprovadores sem perder a
-detecção de omissão garantida pelos Mandatos 3CP.
-
-```
-3CP (protocolo) ← Gleipnir (implementa) ← CARCOSA (consome)
-```
 
 ## Citação (pré-publicação)
 
@@ -132,6 +152,6 @@ detecção de omissão garantida pelos Mandatos 3CP.
 ---
 
 <p align="center">
-  <strong>3CP</strong> — Protocolo Criptográfico de Cadeia de Custódia v1<br>
+  <strong>3CP</strong> — Protocolo Criptográfico de Cadeia de Custódia v2.0<br>
   Todos os Direitos Reservados © 2026
 </p>
