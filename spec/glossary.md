@@ -41,6 +41,9 @@ Detected by comparing the mandate's rules against the chain at verification time
 custody, control, transfer, analysis, and disposition of digital evidence. 3CP
 produces cryptographic chain-of-custody evidence.
 
+**CommitSig** — The leader's Dilithium3 signature over the final block hash,
+including the PREPARE quorum evidence. Introduced in protocol v2.0.
+
 **Contestability** — The property that evidence can be challenged, but the
 challenge must occur over the intact chain, not over a chain reconstructed after
 the incident. This is the core architectural property of 3CP.
@@ -72,6 +75,10 @@ that block is final. No forks, no rollbacks, no reorganization.
 
 ## G
 
+**GenesisValidatorSet** — The initial set of validators declared in the genesis
+block, containing each validator's ValidatorID, Dilithium3PK, and VRFPK.
+Immutable after genesis.
+
 **gRPC** — The canonical transport for the 3CP wire protocol. Conformant
 implementations MUST expose the 3CP gRPC service.
 
@@ -90,6 +97,9 @@ mechanism. Security level: NIST Level 5.
 network's Laplacian matrix. Used by 3CP to supervise network diffusion health.
 Values below `MinLambda1` indicate possible network fragmentation.
 
+**Light Client** — A protocol participant that verifies blocks and SMT proofs
+without executing consensus or maintaining full network state.
+
 ## M
 
 **Mandate** — A signed, versioned, anchored declaration defining which event
@@ -106,13 +116,31 @@ active `Mandate` rule with `mandatory: true`.
 **M-of-N quorum** — A configurable threshold of validators required to finalize
 a block. For example, `3/5` means 3 out of 5 validators must co-sign.
 
+**Mode Degraded** — Consensus mode activated when TotalValidators < 4. Finality
+requires only 1-of-N signatures, but each block must be labelled as degraded.
+
+**GraceCycles** — Number of consecutive cycles with normal quorum required to
+exit Mode Degraded. Default: 10. Configurable via Mandate.
+
 ## N
+
+**NetworkID** — The BLAKE3-256 hash of the genesis block. Used as cryptographic
+salt for UID0 derivation and domain separation between distinct 3CP networks.
+
+**Anchor Publisher** — An entity (validator or external service) that publishes
+finalized blocks to publicly-readable storage (IPFS, S3, filesystem) so that
+light clients and auditors can access the chain without relying on validator
+node availability.
 
 **Non-repudiation** — A cryptographic guarantee that a party cannot deny having
 submitted a specific entry. In 3CP, achieved via Dilithium3 signatures on both
 block-level and entry-level payloads.
 
 ## P
+
+**PrepareSigsBitmap** — Bitfield indicating which validators contributed a
+PREPARE signature for a given block. Bit `i` corresponds to validator at index
+`i` in the block's `Validators` array. Introduced in protocol v2.0.
 
 **Proposer** — The validator selected by ECVRF leader election to build the next
 block. Selected as the peer with the lowest VRF Gamma output.
@@ -162,3 +190,6 @@ deterministic, verifiable identity. Serialized as canonical CBOR.
 
 **Zero hash** — A 32-byte array of all zeros. Rejected by entry validation as
 invalid (`ZERO_HASH` error).
+
+**ZKBridge** — A versioned interface contract between the 3CP anchoring layer
+and zero-knowledge proof consumers. Defined as ZKBridge v1.0.0 in protocol v2.0.

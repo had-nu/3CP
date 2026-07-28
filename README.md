@@ -8,8 +8,8 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/status-draft-yellow" alt="Status: Draft">
-  <img src="https://img.shields.io/badge/protocol--version-v1-blue" alt="Protocol Version: v1">
-  <img src="https://img.shields.io/badge/conformance-33%2F33%20passing-brightgreen" alt="Conformance: 33/33">
+  <img src="https://img.shields.io/badge/protocol--version-v2-blue" alt="Protocol Version: v2">
+  <img src="https://img.shields.io/badge/conformance-extended%20suite-brightgreen" alt="Conformance: Extended">
   <img src="https://img.shields.io/badge/pre--publication-private-red" alt="Pre-publication: Private">
 </p>
 
@@ -61,13 +61,51 @@ contestable evidence of decision provenance.
 
 | Layer | Specification |
 |---|---|
-| Wire format | Canonical CBOR (integer-keyed, deterministic) — see [`spec/3CP.md`](spec/3CP.md) §4 |
-| Consensus | ECVRF leader election (RFC 9381) + M-of-N Dilithium3 quorum — §6 |
-| State | Sparse Merkle Tree (Blake3, depth 256) — §5 |
+| Wire format | Canonical CBOR (integer-keyed, deterministic) — see [`spec/SPEC-3CP-V2.md`](spec/SPEC-3CP-V2.md) §5 |
+| Consensus | Two-phase BFT (PREPARE/COMMIT) with ECVRF leader election + `ceil(2N/3)` Dilithium3 quorum — §6 |
+| State | Sparse Merkle Tree (BLAKE3, depth 256) — §9 |
 | Transport (canonical) | gRPC over Protocol Buffers — §7 |
 | Sub-chains | Per-service SMT + cross-chain anchors — §9 |
-| Identity | UID0 soulbound tokens with contract-derived binding — §8 |
+| Identity | UID0 soulbound tokens with contract-derived binding — §14 |
 | Mandates | Signed, versioned, anchored declarations of anchoring obligations — §13 |
+| Key Rotation | Protocol-native `3cp:key-rotation:v1` entries — §8 |
+| Verifiability | Light Client protocol + Anchor Publishers — §12 |
+
+## Specification
+
+The `spec/` directory contains the normative protocol definition:
+
+- `SPEC-3CP-V2.md` — Current normative specification (v2.0)
+- `3CP.md` — Historical v1.0 specification (preserved for reference)
+- `glossary.md` — Unified terminology
+- `schemas/` — CDDL schemas for all protocol data structures
+- `notes/` — Explanatory documents on protocol design decisions
+- `examples/` — Test vectors and conformance fixtures
+
+## Implementations
+
+3CP is a protocol specification. Reference implementations are maintained in
+separate repositories:
+
+- **Gleipnir** (Go) — Reference implementation of the 3CP node. Available at
+  [github.com/had-nu/gleipnir](https://github.com/had-nu/gleipnir) under AGPL-3.0.
+- **CARCOSA** (Rust) — ZK audit framework consuming the 3CP anchoring layer. Available at
+  [github.com/had-nu/carcosa](https://github.com/had-nu/carcosa).
+
+These repositories are **not part of this specification repository**.
+
+```
+3CP (protocol) ← Gleipnir (implements) ← CARCOSA (consumes)
+```
+
+## Conformance
+
+Implementations claiming 3CP v2.0 conformance must pass the extended test suite
+defined in `spec/examples/` and `spec/notes/`, including:
+
+- 12+ adversarial BFT test cases (TC-BFT-01 through TC-MEM-01 per §15)
+- Key rotation vectors (`test-vectors-key-rotation.md`)
+- Light client verification vectors (`test-vectors-light-client.md`)
 
 ## Repository Structure
 
@@ -76,43 +114,25 @@ contestable evidence of decision provenance.
 ├── README.md            ← this file
 ├── README.pt-BR.md      ← Portuguese version
 ├── CONTRIBUTING.md      ← how to propose changes
-├── CARCOSA.md           ← ZK audit framework coupled to 3CP
 ├── PLAYBOOK.md          ← intern onboarding playbook
 ├── LICENSE              ← All Rights Reserved (pre-publication)
 ├── spec/
-│   ├── 3CP.md           ← normative protocol specification (RFC 2119)
-│   ├── glossary.md       ← terminology
-│   ├── schemas/          ← CDDL wire format definitions
-│   └── examples/         ← test vectors
+│   ├── SPEC-3CP-V2.md   ← normative protocol specification v2.0 (RFC 2119)
+│   ├── 3CP.md           ← historical v1.0 specification
+│   ├── glossary.md      ← terminology
+│   ├── schemas/         ← CDDL wire format definitions
+│   ├── notes/           ← explanatory notes
+│   └── examples/        ← test vectors
 ```
 
 ## Status
 
-- **Draft** — the specification is complete and validated by a 33-test
+- **Draft** — the specification is complete and validated by an extended
   conformance suite against the reference implementation.
 - **Pre-publication** — this repository is private. The specification will be
   opened alongside the accompanying academic paper.
-- **Protocol version**: v1 — wire-format stable. Future versions will be
+- **Protocol version**: v2.0 — wire-format stable. Future versions will be
   backward-compatible or explicitly versioned.
-
-## Reference Implementation
-
-**Gleipnir** — a Go reference implementation of the 3CP protocol. Available at
-[github.com/had-nu/gleipnir](https://github.com/had-nu/gleipnir) under AGPL-3.0.
-The Gleipnir conformance test suite (33 tests) validates the protocol at the
-gRPC boundary.
-
-## CARCOSA — Coupled ZK Audit Framework
-
-**CARCOSA** (`CARCOSA.md`) is a zero-knowledge audit framework that couples to
-3CP. Unlike Gleipnir — which **implements** the protocol — CARCOSA **consumes**
-the 3CP anchoring layer (via gRPC) to seal STARK proofs on-chain, preserving
-approver privacy without losing the omission detection guaranteed by 3CP
-Mandates.
-
-```
-3CP (protocol) ← Gleipnir (implements) ← CARCOSA (consumes)
-```
 
 ## Citation (pre-publication)
 
@@ -128,6 +148,6 @@ Mandates.
 ---
 
 <p align="center">
-  <strong>3CP</strong> — Cryptographic Chain-of-Custody Protocol v1<br>
+  <strong>3CP</strong> — Cryptographic Chain-of-Custody Protocol v2.0<br>
   All Rights Reserved © 2026
 </p>

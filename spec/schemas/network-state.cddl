@@ -1,0 +1,27 @@
+;; 3CP Network State v2.0
+;; CDDL — RFC 8610
+;; Canonical CBOR with integer keys in ascending order.
+
+network-state = {
+    0 => [* node-state],           ; Nodes in the network topology
+    1 => float64,                   ; Lambda1 (Fiedler eigenvalue)
+    2 => uint64,                    ; Current cycle index
+    3 => [* mandate-entry],         ; Active mandates (anchored in chain)
+    4 => bytes .size 32,            ; SupervisionRoot (hash of validator state)
+    5 => [* validator-info],        ; ValidatorSet (canonical ordering)
+}
+
+node-state = {
+    0 => bytes .size 16,    ; UID (RootID)
+    1 => float64,            ; Status (connectivity weight, 0.0-1.0)
+    2 => uint64,            ; Consecutive cycles active
+    3 => bytes .size 1952,  ; Dilithium3PK (public signing key)
+    4 => bytes .size 32,    ; VRFPK (public VRF key)
+}
+
+validator-info = {
+    0 => bytes .size 16,    ; ValidatorID (RootID)
+    1 => bytes .size 1952,  ; Dilithium3PK
+    2 => bytes .size 32,    ; VRFPK
+    3 => bytes .size 32,    ; ContractHash (optional, default zeros)
+}

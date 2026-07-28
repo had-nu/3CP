@@ -46,3 +46,29 @@ compliance-gap = {
   5 => "anchored" / "missing" / "missing_fields",
   6 => tstr,                       ; Details
 }
+
+;; Example: consensus configuration mandate rule
+consensus-config-rule = {
+  0 => "3cp:consensus-config",
+  1 => "Network consensus parameters",
+  2 => 0.0,
+  3 => 10.0,
+  4 => 1,
+  5 => [],
+  6 => true,
+  7 => ["GraceCycles", "MinValidators", "BaseIntervalMs", "MaxCycleDurationMs"],
+  8 => 0
+}
+
+;; Example: anchor publisher configuration mandate rule
+anchor-config-rule = {
+  0 => "3cp:anchor-config",
+  1 => "Anchor publisher configuration",
+  2 => 0.0,
+  3 => 10.0,
+  4 => 1,
+  5 => [],
+  6 => true,
+  7 => ["Mode", "MinRedundancy"],
+  8 => 0
+}

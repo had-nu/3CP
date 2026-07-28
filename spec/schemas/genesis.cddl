@@ -1,0 +1,28 @@
+;; 3CP Genesis Block v2.0
+;; CDDL — RFC 8610
+;; The genesis block is block index 0. It bootstraps the ValidatorSet
+;; and the initial Mandate configuration.
+
+genesis-block = {
+    0 => uint64,                    ; Index: 0
+    1 => bytes .size 32,            ; PrevHash: 32 zero bytes
+    2 => bytes .size 32,            ; StateRoot (SMT root after genesis entries)
+    3 => bytes .size 16,            ; Proposer (first validator in GenesisValidatorSet)
+    5 => [* provenance-entry],       ; Anchored (must include GenesisMandate)
+    6 => float64,                    ; Lambda1 (0.0 for genesis)
+    7 => int64,                      ; Timestamp (UnixNano)
+    9 => [* bytes .size 1952],       ; Validators (Dilithium3 PKs from GenesisValidatorSet)
+    10 => quorum-config,              ; Quorum {TotalValidators, RequiredSigs}
+    11 => bytes .size 32,            ; BlockHash (SHA-256 of canonical fields)
+    12 => uint16,                     ; ProtocolVersion: 2
+    18 => bytes .size 32,            ; LegacyAnchor (H(last_block_v1), zeros if none)
+}
+
+genesis-validator-set = [* genesis-validator-info]
+
+genesis-validator-info = {
+    0 => bytes .size 16,    ; ValidatorID (RootID)
+    1 => bytes .size 1952,  ; Dilithium3PK
+    2 => bytes .size 32,    ; VRFPK
+    3 => bytes .size 32,    ; ContractHash (optional, zeros if absent)
+}

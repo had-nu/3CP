@@ -263,6 +263,36 @@ ProvenanceEntry {
 
 ---
 
+## 7. Block v2.0 (Index 1, multi-node)
+
+```cbor
+Block {
+  0: 1,
+  1: h'9034d8157f01e4c2f742a4b2584ad971d4b4463c95e3fd7832c33771cbe84bd1', ; PrevHash (genesis BlockHash)
+  2: h'b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2', ; StateRoot
+  3: h'val0------------', ; Proposer
+  5: [ /* 2 entries */ ],
+  6: 0.42,
+  7: 1784030403000000000,
+  8: [h'[sig0]', h'[sig1]', h'[sig2]'],  ; 3 PREPARE sigs
+  9: [h'[pk0]', h'[pk1]', h'[pk2]', h'[pk3]'], ; 4 validators
+  10: {0: 4, 1: 3},
+  11: h'blockhash1................................',
+  12: 2,                    ; ProtocolVersion
+  13: h'0xe0',              ; Bitmap: val0,val1,val2 signed (bits 0,1,2)
+  14: [h'[sig0]', h'[sig1]', h'[sig2]'],
+  15: h'[CommitSig from val0]',
+  16: ["ipfs://QmX4z...", "file:///var/3cp/blocks/1.cbor"],
+  17: 0,                    ; KeyRotationEpoch (no rotation yet)
+}
+```
+
+### BlockHash v2.0 Computation
+
+Same as v1.0, but the preimage includes the v2.0 fields in canonical CBOR order.
+
+---
+
 ## Conformance Notes
 
 - All SHA-256 hashes above are computed with Go's `crypto/sha256`.

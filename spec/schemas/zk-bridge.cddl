@@ -1,0 +1,24 @@
+;; 3CP ZK Bridge Protocol v1.0.0
+;; CDDL — RFC 8610
+;; Interface contract between 3CP anchoring layer and ZK proof consumers.
+
+zk-bridge-request = {
+    0 => tstr,               ; Method: "GetBlockRange" / "GetMerkleProof" / "GetValidatorSet"
+    ? 1 => uint64,           ; Start (block index)
+    ? 2 => uint64,           ; End (block index, inclusive)
+    ? 3 => bytes .size 32,   ; Key (entry hash, for GetMerkleProof)
+    ? 4 => uint64,           ; BlockIndex (for GetMerkleProof context)
+    ? 5 => hash-function,    ; Preferred hash function for circuit consumption
+}
+
+hash-function = &(
+    BLAKE3: 1,
+    POSEIDON2: 2,            ; Reserved for v2.1+
+    RESCUE_PRIME: 3,         ; Reserved for v2.1+
+)
+
+zk-bridge-response = {
+    0 => bool,               ; Success
+    1 => [* block] / smt-proof / [* validator-info] / null,
+    ? 2 => tstr,             ; Error message
+}

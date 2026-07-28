@@ -1,3 +1,7 @@
+> **NOTE:** This document specifies 3CP Protocol v1.0, preserved for historical
+> reference. The current normative specification is **3CP Protocol v2.0**
+> (`spec/SPEC-3CP-V2.md`). New implementations should conform to v2.0.
+
 ---
 title: 3CP — Cryptographic Chain-of-Custody Protocol
 description: An application-layer protocol for producing, preserving, and verifying cryptographic chain-of-custody evidence across distributed systems
@@ -258,7 +262,7 @@ concatenating all siblings in order:
 
 ```
 proofBytes = sibling[0] || sibling[1] || ... || sibling[n-1]
-            // each 32 bytes, total = n * 32 bytes
+             // each 32 bytes, total = n * 32 bytes
 ```
 
 For a key that does not exist (proof of absence), the leaf hash is computed

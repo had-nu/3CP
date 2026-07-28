@@ -1,0 +1,19 @@
+;; 3CP Key Rotation Entry v2.0
+;; CDDL — RFC 8610
+;; EventClass: "3cp:key-rotation:v1"
+
+key-rotation-entry = {
+    ;; Base provenance-entry fields
+    0 => bytes .size 32,    ; Hash (BLAKE3-256 of canonical CBOR excluding signatures)
+    1 => bytes .size 16,    ; Submitter (ValidatorID)
+    2 => int64,              ; Timestamp (UnixNano)
+    3 => tstr,               ; Label: "3cp:key-rotation:v1"
+
+    ;; Rotation-specific fields
+    20 => bytes .size 1952,  ; NewPublicKey (Dilithium3 public key)
+    21 => bytes .size 32,    ; NewVRFPublicKey (Ristretto255 point)
+    22 => uint64,             ; EffectiveCycle (first cycle with new key)
+    23 => uint64,             ; ExpiryCycle (last cycle old key signs)
+    24 => bytes .size 2700,  ; SignatureOld (Dilithium3 with current key)
+    25 => bytes .size 2700,  ; SignatureNew (Dilithium3 with NewPublicKey)
+}

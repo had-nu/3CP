@@ -1,0 +1,18 @@
+;; 3CP Light Client Protocol v2.0
+;; CDDL — RFC 8610
+;; Request/response types for light client verification.
+
+light-client-request = {
+    0 => tstr,               ; Method: "GetBlock" / "StreamBlocks" / "GetValidatorSet" / "GetMerkleProof"
+    ? 1 => uint64,           ; StartIndex (for StreamBlocks)
+    ? 2 => uint64,           ; BlockIndex (for GetBlock, GetMerkleProof)
+    ? 3 => bytes .size 32,   ; Key (entry hash, for GetMerkleProof)
+}
+
+light-client-response = {
+    0 => bool,               ; Success
+    1 => block / [* block] / [* validator-info] / smt-proof / null,
+    ? 2 => tstr,             ; Error message (if Success == false)
+}
+
+smt-proof = bytes .size 8192  ; 256 × 32 bytes sibling hashes

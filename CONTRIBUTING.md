@@ -24,7 +24,7 @@ proposing changes to the protocol specification.
 
 ## Specification Requirements
 
-All normative changes to `spec/3CP.md` MUST:
+All normative changes to `spec/SPEC-3CP-V2.md` MUST:
 
 1. Use RFC 2119 key words (MUST, SHOULD, MAY, etc.) correctly.
 2. Include rationale for each normative requirement.
@@ -46,7 +46,7 @@ All normative changes to `spec/3CP.md` MUST:
 
 ## Specification Changes
 
-- `spec/3CP.md`: [summary of changes]
+- `spec/SPEC-3CP-V2.md`: [summary of changes]
 - `spec/schemas/`: [summary of changes, if any]
 - `spec/examples/`: [summary of changes, if any]
 
