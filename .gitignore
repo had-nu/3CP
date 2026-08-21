@@ -1,6 +1,7 @@
 # OS
 .DS_Store
 Thumbs.db
+MOVE-LOG.md
 
 # Editors
 *.swp
@@ -8,6 +9,8 @@ Thumbs.db
 *~
 .idea/
 .vscode/
+.old/
+3CP-internal/
 
 # OS metadata
 ._*
