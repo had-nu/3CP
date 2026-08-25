@@ -91,7 +91,7 @@ The `anchored[*].Hash` entries MUST be in the same order as the block's
 | Algorithm | ML-DSA-65 (Dilithium3) |
 | Public key size | 1952 bytes |
 | Signature size | 2700 bytes |
-| Security level | NIST Level 3 (AES-256 equivalent) |
+| Security level | NIST Level 3 (AES-192 equivalent) |
 
 Conformant implementations MUST use the same parameter set. Private keys are
 never transmitted on the wire.
@@ -103,7 +103,7 @@ never transmitted on the wire.
 | Algorithm | ML-KEM-1024 (Kyber1024) |
 | Ciphertext size | 1568 bytes |
 | Shared secret size | 32 bytes |
-| Security level | NIST Level 5 (AES-256 equivalent) |
+| Security level | NIST Level 5 (AES-192 equivalent) |
 
 Used for peer-to-peer encrypted channels.
 

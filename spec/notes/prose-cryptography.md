@@ -77,7 +77,7 @@ BlockHash = SHA-256(
 | Algorithm | ML-DSA-65 (Dilithium3) |
 | Public key | 1952 bytes |
 | Signature | 2700 bytes |
-| Security level | NIST Level 3 (AES-256 equivalent) |
+| Security level | NIST Level 3 (AES-192 equivalent) |
 
 - **Use:** client authentication (`SubmitHash`), block proposer/validator
   co-signatures, optional per-entry non-repudiation.

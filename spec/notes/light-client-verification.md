@@ -6,7 +6,7 @@ A light client does not execute consensus, maintain full state, or trust any
 single node. It verifies blocks using only:
 
 1. The `ValidatorSet` for the cycle in question.
-2. The block's `PrepareSigs`, `CommitSig`, and `BlockHash`.
+2. The block's `PrepareSigsPayload`, `CommitSig`, and `BlockHash`.
 3. SMT proofs for individual entries.
 
 ## Verification Steps
@@ -14,7 +14,7 @@ single node. It verifies blocks using only:
 Given a block `B` and a trusted `ValidatorSet_V` (obtained from an Anchor
 Publisher or synced from a full node):
 
-1. Verify `len(B.PrepareSigs) >= ceil(2*N/3)` where `N = len(ValidatorSet_V)`.
+1. Verify `len(B.PrepareSigsPayload) >= ceil(2*N/3)` where `N = len(ValidatorSet_V)`.
 2. Verify each PREPARE signature against the corresponding validator's
    `Dilithium3PK` in `ValidatorSet_V`.
 3. Verify `B.CommitSig` against the proposer's `Dilithium3PK`.

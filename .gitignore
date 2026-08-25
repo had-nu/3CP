@@ -10,7 +10,7 @@ MOVE-LOG.md
 .idea/
 .vscode/
 .old/
-3CP-internal/
+internal/
 
 # OS metadata
 ._*

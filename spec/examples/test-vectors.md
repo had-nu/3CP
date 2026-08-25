@@ -1,7 +1,7 @@
 # 3CP Test Vectors
 
-**Protocol version**: v1
-**Generated**: 2026-07-14
+**Protocol version**: v2.0
+**Generated**: 2026-07-28
 **Source**: Gleipnir conformance test suite fixtures
 
 ---
@@ -35,16 +35,16 @@ SHA-256:
 
 ---
 
-## 2. Block (Genesis, Index 0)
+## 2. Block v2.0 (Genesis, Index 0)
 
 ```
 Block {
-  Index:       0
-  PrevHash:    0000000000000000000000000000000000000000000000000000000000000000
-  StateRoot:   000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f
-  Proposer:    4e4f44453030312d2d2d2d2d2d2d2d2d
-  Triad:       [reserved]
-  Anchored:    [1 entry]
+  Index:               0
+  PrevHash:            0000000000000000000000000000000000000000000000000000000000000000
+  StateRoot:           000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f
+  Proposer:            4e4f44453030312d2d2d2d2d2d2d2d2d
+  Triad:               [reserved]
+  Anchored:            [1 entry]
     [0]:
       Hash:      62e3391cf9506246869a9a2828517c2dff1cf60c5c3d41798e693905cd4db509
       Submitter: 4e4f44453030312d2d2d2d2d2d2d2d2d
@@ -53,16 +53,22 @@ Block {
       Approver:  (absent)
       Reference: (absent)
       Signature: (absent)
-  Lambda1:     0.28
-  Timestamp:   1784030400000000000
-  Sigs:        [1 Dilithium3 signature, 2700 bytes]
-  Validators:  [1 Dilithium3 public key, 1952 bytes]
-  Quorum:      {TotalValidators: 1, RequiredSigs: 1}
-  BlockHash:   9034d8157f01e4c2f742a4b2584ad971d4b4463c95e3fd7832c33771cbe84bd1
+  Lambda1:             0.28
+  Timestamp:           1784030400000000000
+  Reserved:            null                           ; Key 8 — RESERVED in v2.0
+  Validators:          [1 Dilithium3 public key, 1952 bytes]
+  Quorum:              {TotalValidators: 1, RequiredSigs: 1}
+  BlockHash:           9034d8157f01e4c2f742a4b2584ad971d4b4463c95e3fd7832c33771cbe84bd1
+  ProtocolVersion:     2                              ; Key 12
+  PrepareSigsBitmap:   0x01                           ; Key 13 — bit 0 set (single validator)
+  PrepareSigsPayload:  [1 Dilithium3 signature, 2700 bytes] ; Key 14
+  CommitSig:           1 Dilithium3 signature, 2700 bytes       ; Key 15
+  ExternalAnchors:     ["ipfs://QmGenesis...", "file:///var/3cp/blocks/0.cbor"] ; Key 16
+  KeyRotationEpoch:    0                              ; Key 17
 }
 ```
 
-### BlockHash Verification
+### BlockHash Verification (v2.0)
 
 ```
 Preimage:
@@ -70,8 +76,9 @@ Preimage:
   || PrevHash (32 bytes, zeros for genesis)            = 00×32
   || StateRoot (32 bytes, 0x00..0x1f)                  = 00 01 02 … 1e 1f
   || Proposer (16 bytes, "NODE001---------")           = 4e 4f 44 45 30 30 31 2d 2d 2d 2d 2d 2d 2d 2d 2d
-  || anchored[0].Hash (32 bytes, Entry 1 hash)         = 62 e3 39 1c … 09
+  || HashOfAnchoredEntries (BLAKE3-256 of key 5)       = <computed from anchored array>
   || LE64(1784030400000000000)                          = 00 50 4f 7d 57 18 00 00
+  || QuorumConfigCanonical                              = CBOR(10: {0: 1, 1: 1})
 
 SHA-256(preimage) = 9034d8157f01e4c2f742a4b2584ad971d4b4463c95e3fd7832c33771cbe84bd1
 ```
@@ -149,7 +156,8 @@ AnchorProof {
 3. Verify result == AnchorProof.StateRoot
 4. Retrieve block at AnchorProof.BlockIndex
 5. Verify block.StateRoot == AnchorProof.StateRoot
-6. Verify block's Sigs field contains valid M-of-N+ signatures
+6. Verify block's PrepareSigsPayload contains valid ceil(2N/3) PREPARE signatures
+   and CommitSig verifies against Proposer
 ```
 
 ---
@@ -263,7 +271,7 @@ ProvenanceEntry {
 
 ---
 
-## 7. Block v2.0 (Index 1, multi-node)
+## 7. Block v2.0 (Index 1, 4-node network)
 
 ```cbor
 Block {
@@ -274,22 +282,81 @@ Block {
   5: [ /* 2 entries */ ],
   6: 0.42,
   7: 1784030403000000000,
-  8: [h'[sig0]', h'[sig1]', h'[sig2]'],  ; 3 PREPARE sigs
+  8: null,                              ; Key 8 — RESERVED in ProtocolVersion == 2
   9: [h'[pk0]', h'[pk1]', h'[pk2]', h'[pk3]'], ; 4 validators
-  10: {0: 4, 1: 3},
-  11: h'blockhash1................................',
-  12: 2,                    ; ProtocolVersion
-  13: h'0xe0',              ; Bitmap: val0,val1,val2 signed (bits 0,1,2)
-  14: [h'[sig0]', h'[sig1]', h'[sig2]'],
-  15: h'[CommitSig from val0]',
+  10: {0: 4, 1: 3},                     ; QuorumConfig: 4 validators, ceil(2*4/3)=3
+  11: h'blockhash1................................', ; BlockHash
+  12: 2,                                 ; ProtocolVersion
+  13: h'0xe0',                           ; PrepareSigsBitmap: val0,val1,val2 signed (bits 0,1,2)
+  14: [h'[sig0]', h'[sig1]', h'[sig2]'], ; PrepareSigsPayload (3 sigs)
+  15: h'[CommitSig from val0]',          ; CommitSig (leader = val0)
   16: ["ipfs://QmX4z...", "file:///var/3cp/blocks/1.cbor"],
-  17: 0,                    ; KeyRotationEpoch (no rotation yet)
+  17: 0,                                 ; KeyRotationEpoch
 }
 ```
 
-### BlockHash v2.0 Computation
+### Field-by-Field Explanation
 
-Same as v1.0, but the preimage includes the v2.0 fields in canonical CBOR order.
+| Key | Field | Value | Notes |
+|-----|-------|-------|-------|
+| 0 | Index | 1 | Cycle 1 |
+| 1 | PrevHash | genesis BlockHash | Links to block 0 |
+| 2 | StateRoot | SMT root after inserting 2 entries | |
+| 3 | Proposer | `val0` RootID | Leader per VRF election |
+| 5 | Anchored | 2 entries | Application payload |
+| 6 | Lambda1 | 0.42 | Fiedler eigenvalue |
+| 7 | Timestamp | 1784030403000000000 | UnixNano |
+| 8 | Reserved | null | MUST be null in v2.0 |
+| 9 | Validators | 4 × Dilithium3PK | Complete validator set |
+| 10 | QuorumConfig | {Total: 4, Required: 3} | ceil(2×4/3) = 3 |
+| 11 | BlockHash | SHA-256 of preimage | Excludes keys 12-17 |
+| 12 | ProtocolVersion | 2 | v2.0 |
+| 13 | PrepareSigsBitmap | `0xe0` (binary `11100000`) | Bits 0,1,2 = 1 (val0,val1,val2) |
+| 14 | PrepareSigsPayload | 3 × 2700-byte sigs | Only active signers, in index order |
+| 15 | CommitSig | 2700 bytes | Leader (val0) signs H(B_final) |
+| 16 | ExternalAnchors | 2 URIs | IPFS + local filesystem |
+| 17 | KeyRotationEpoch | 0 | No rotation yet |
+
+---
+
+## 8. Key Rotation Entry (Valid Rotation)
+
+```
+key-rotation-entry {
+  0: h'hash32...',                    ; Hash (BLAKE3-256 of payload)
+  1: h'val1------------',              ; Submitter (ValidatorID)
+  2: 1784030400000000000,              ; Timestamp
+  3: "3cp:key-rotation:v1",            ; Label
+  20: h'[1952-byte Dilithium3 PK]',    ; NewPublicKey
+  21: h'[32-byte VRF PK]',             ; NewVRFPublicKey
+  22: 15,                              ; EffectiveCycle
+  23: 25,                              ; ExpiryCycle
+  24: h'[2700-byte sig with OLD key]', ; SignatureOld
+  25: h'[2700-byte sig with NEW key]', ; SignatureNew
+}
+```
+
+### Validation Checklist
+
+- [ ] `SignatureOld` verifies against `val1`'s active Dilithium3PK at current cycle
+- [ ] `SignatureNew` verifies against `NewPublicKey` (field 20)
+- [ ] `EffectiveCycle (15) >= currentCycle + KeyRotationLeadTime (default 10)`
+- [ ] `ExpiryCycle (25) >= EffectiveCycle + MinKeyOverlap (default 10)`
+- [ ] `EffectiveCycle > lastRotationCycle` for `val1` (no overlapping rotations)
+
+---
+
+## 9. Light Client Verification (Block 1)
+
+Given block `B` (index 1) and trusted `ValidatorSet_V` (obtained from Anchor Publisher):
+
+1. `RequiredSigs = ceil(2*4/3) = 3`. `PrepareSigsPayload` has 3 signatures. ✓
+2. Verify `PrepareSigsPayload[0]` against `Validators[0]` (val0). ✓
+3. Verify `PrepareSigsPayload[1]` against `Validators[1]` (val1). ✓
+4. Verify `PrepareSigsPayload[2]` against `Validators[2]` (val2). ✓
+5. Verify `CommitSig` against `Validators[0]` (val0, the proposer). ✓
+6. Verify `BlockHash` algorithm per §4.4. ✓
+7. Verify `PrevHash` chain to genesis. ✓
 
 ---
 
@@ -298,6 +365,9 @@ Same as v1.0, but the preimage includes the v2.0 fields in canonical CBOR order.
 - All SHA-256 hashes above are computed with Go's `crypto/sha256`.
 - All BLAKE3 hashes use BLAKE3-256 (32-byte output).
 - Timestamps are UnixNano (`time.UnixNano()`).
-- The test vector block uses single-node mode (QuorumConfig 1/1).
-- For multi-node, Sigs contains M × 2700-byte Dilithium3 signatures.
+- The genesis block uses single-node mode (QuorumConfig 1/1) for simplicity.
+- For multi-node, `PrepareSigsPayload` contains `ceil(2N/3)` × 2700-byte Dilithium3 signatures.
 - Binary values are hex-encoded. The canonical representation is raw bytes.
+- Key 8 is `null` in all v2.0 blocks; presence of non-null value MUST cause rejection.
+- `PrepareSigsBitmap` length matches `len(Validators)`; unused high-order bits MUST be zero.
+- `PrepareSigsPayload` length MUST equal popcount of `PrepareSigsBitmap`.

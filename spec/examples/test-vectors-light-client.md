@@ -34,10 +34,10 @@ Block {
 
 ### Light Client Verification
 
-1. `RequiredSigs = ceil(2*4/3) = 3`. `PrepareSigs` has 3 signatures. ✓
-2. Verify `PrepareSigs[0]` against `Validators[0]` (val0). ✓
-3. Verify `PrepareSigs[1]` against `Validators[1]` (val1). ✓
-4. Verify `PrepareSigs[2]` against `Validators[2]` (val2). ✓
+1. `RequiredSigs = ceil(2*4/3) = 3`. `PrepareSigsPayload` has 3 signatures. ✓
+2. Verify `PrepareSigsPayload[0]` against `Validators[0]` (val0). ✓
+3. Verify `PrepareSigsPayload[1]` against `Validators[1]` (val1). ✓
+4. Verify `PrepareSigsPayload[2]` against `Validators[2]` (val2). ✓
 5. Verify `CommitSig` against `Validators[1]` (val1, the proposer). ✓
 6. Verify `BlockHash` algorithm. ✓
 

@@ -58,7 +58,7 @@ a sub-chain AND that the sub-chain root was anchored in the parent chain.
 ## D
 
 **Dilithium3** — ML-DSA-65, a NIST-standardized post-quantum digital signature
-algorithm. Security level: NIST Level 3 (AES-256 equivalent). Signature size:
+algorithm. Security level: NIST Level 3 (AES-192 equivalent). Signature size:
 2700 bytes.
 
 ## E

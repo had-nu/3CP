@@ -11,7 +11,7 @@ block = {
   5 => [* provenance-entry],       ; Anchored entries
   6 => float64,                    ; Lambda1 (Laplacian eigenvalue)
   7 => int64,                      ; Timestamp (UnixNano)
-  8 => [* bytes .size 2700],       ; PREPARE signatures collected by leader (v2.0 semantics)
+  8 => null,                       ; RESERVED in ProtocolVersion == 2 (was Sigs in v1.0)
   9 => [* bytes .size 1952],       ; Validators (Dilithium3 public keys)
   10 => quorum-config,             ; Quorum
   11 => bytes .size 32,            ; BlockHash (SHA-256)
@@ -19,7 +19,7 @@ block = {
   ;; v2.0 fields
   12 => uint16,                     ; ProtocolVersion (default: 2)
   13 => bytes,                      ; PrepareSigsBitmap (bitfield, N bits)
-  14 => [* bytes .size 2700],       ; PrepareSigs (only active signers)
+  14 => [* bytes .size 2700],       ; PrepareSigsPayload (only active signers)
   15 => bytes .size 2700,           ; CommitSig (leader's commit signature)
   16 => [* tstr],                   ; ExternalAnchors (URIs/CIDs of publication)
   17 => uint64,                     ; KeyRotationEpoch (reference cycle for active keys)
