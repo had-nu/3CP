@@ -14,11 +14,14 @@ This file lists all individuals who have contributed to the **3CP (Cryptographic
 |------|------|--------------|
 | *Your Name Here* | *Role* | *Describe your contribution* |
 
+## Development
+
+This project utilized **AI-assisted tools** for code generation, review, and optimization during development. While AI contributed to implementation details, the **protocol design, architecture, and innovation** (such as Mandatory Event Anchoring and Contestability) are entirely the work of the lead architect.
+
 ## Special Thanks
 
 | Name | Role | Contribution |
 |------|------|--------------|
-| AI Assistants | Code Generation & Review | Assisted in implementation details, code reviews, and documentation for Gleipnir and CARCOSA. |
 | Open-Source Community | Feedback & Testing | Early adopters, testers, and reviewers who provided valuable feedback. |
 
 ## How to Contribute
