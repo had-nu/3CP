@@ -1,16 +1,17 @@
-All Rights Reserved.
+GNU AFFERO GENERAL PUBLIC LICENSE
+Version 3, 19 November 2007
 
-Copyright (c) 2026 André Ataíde.
+Copyright (C) 2026 André Ataíde
 
-This work is protected by copyright law and all rights are reserved.
-No part of this specification may be reproduced, distributed, or
-transmitted in any form or by any means without the prior written
-permission of the copyright holder.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-This specification is made available for review and comment purposes
-only. It is not licensed for commercial use, derivative works, or
-implementation in production systems without explicit written
-authorization.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-This restriction will be reviewed upon publication of the
-accompanying academic paper.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
