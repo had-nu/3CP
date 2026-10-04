@@ -19,8 +19,8 @@ block = {
   ;; v2.0 fields
   12 => uint16,                     ; ProtocolVersion (default: 2)
   13 => bytes,                      ; PrepareSigsBitmap (bitfield, N bits)
-  14 => [* bytes .size 2700],       ; PrepareSigsPayload (only active signers)
-  15 => bytes .size 2700,           ; CommitSig (leader's commit signature)
+  14 => [* bytes .size 3309],       ; PrepareSigsPayload (only active signers)
+  15 => bytes .size 3309,           ; CommitSig (leader's commit signature)
   16 => [* tstr],                   ; ExternalAnchors (URIs/CIDs of publication)
   17 => uint64,                     ; KeyRotationEpoch (reference cycle for active keys)
 }
@@ -32,7 +32,7 @@ provenance-entry = {
   3 => tstr,                       ; Label
   ? 4 => bytes,                    ; Approver (RootID)
   ? 5 => bytes .size 32,           ; Reference (related entry hash)
-  ? 6 => bytes .size 2700,         ; Signature (Dilithium3)
+  ? 6 => bytes .size 3309,         ; Signature (Dilithium3)
   ? 7 => bytes .size 32,           ; MandateRef (hash of MandateEntry, §4.4)
 }
 
@@ -47,7 +47,7 @@ mandate-entry = {
   7 => [* rule],                   ; Rules
   8 => bytes .size 32,             ; PolicyHash
   ? 9 => tstr,                     ; PolicyURI
-  10 => bytes .size 2700,          ; Signature (Dilithium3 from Authority)
+  10 => bytes .size 3309,          ; Signature (Dilithium3 from Authority)
 }
 
 rule = {

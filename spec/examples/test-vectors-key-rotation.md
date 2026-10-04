@@ -25,8 +25,8 @@
   21: h'5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b',       ; NewVRFPublicKey
   22: 100,                                        ; EffectiveCycle
   23: 110,                                        ; ExpiryCycle
-  24: h'[2700-byte SignatureOld]',                ; Signs Hash with old key
-  25: h'[2700-byte SignatureNew]'                 ; Signs Hash with new key
+  24: h'[3309-byte SignatureOld]',                ; Signs Hash with old key
+  25: h'[3309-byte SignatureNew]'                 ; Signs Hash with new key
 }
 ```
 

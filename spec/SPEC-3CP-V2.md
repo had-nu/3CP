@@ -76,7 +76,7 @@ As palavras-chave **MUST**, **MUST NOT**, **REQUIRED**, **SHALL**, **SHALL NOT**
 
 - Tamanho da chave pública: 1.952 bytes
 - Tamanho da chave privada: 4.032 bytes
-- Tamanho da assinatura: 2.700 bytes
+- Tamanho da assinatura: 3.309 bytes
 - Nível de segurança NIST: 3 (equivalente a AES-192)
 
 **[MUST]** Toda assinatura no protocolo 3CP usa Dilithium3, salvo indicação explícita em contrário.
@@ -131,7 +131,7 @@ Block {
     5  => [* provenance-entry],       ; Anchored entries
     6  => float64,                    ; Lambda1 (autovalor de Fiedler)
     7  => int64,                     ; Timestamp (UnixNano)
-    8  => [* bytes .size 2700],      ; Sigs (assinaturas de bloco — ver §5.3)
+    8  => [* bytes .size 3309],      ; Sigs (assinaturas de bloco — ver §5.3)
     9  => [* bytes .size 1952],      ; Validators (chaves públicas dos validadores)
     10 => quorum-config,              ; Quorum
     11 => bytes .size 32,            ; BlockHash (SHA-256)
@@ -139,8 +139,8 @@ Block {
     ;; Campos v2.0 (novos, MUST em redes v2)
     12 => uint16,                     ; ProtocolVersion (default: 2)
     13 => bytes,                      ; PrepareSigsBitmap (bitfield, N bits)
-    14 => [* bytes .size 2700],       ; PrepareSigs (apenas signatários ativos)
-    15 => bytes .size 2700,           ; CommitSig (assinatura do líder sobre B_final)
+    14 => [* bytes .size 3309],       ; PrepareSigs (apenas signatários ativos)
+    15 => bytes .size 3309,           ; CommitSig (assinatura do líder sobre B_final)
     16 => [* tstr],                   ; ExternalAnchors (URIs/CIDs de publicação)
     17 => uint64,                     ; KeyRotationEpoch (ciclo de referência para chaves)
 }
@@ -319,8 +319,8 @@ key-rotation-entry = {
     21 => bytes .size 32,    ; NewVRFPublicKey
     22 => uint64,             ; EffectiveCycle
     23 => uint64,             ; ExpiryCycle
-    24 => bytes .size 2700,  ; SignatureOld (Dilithium3 com chave antiga)
-    25 => bytes .size 2700,  ; SignatureNew (Dilithium3 com chave nova)
+    24 => bytes .size 3309,  ; SignatureOld (Dilithium3 com chave antiga)
+    25 => bytes .size 3309,  ; SignatureNew (Dilithium3 com chave nova)
 }
 ```
 
@@ -619,8 +619,8 @@ key-rotation-entry = {
     21 => bytes .size 32,    ; NewVRFPublicKey
     22 => uint64,             ; EffectiveCycle
     23 => uint64,             ; ExpiryCycle
-    24 => bytes .size 2700,  ; SignatureOld
-    25 => bytes .size 2700,  ; SignatureNew
+    24 => bytes .size 3309,  ; SignatureOld
+    25 => bytes .size 3309,  ; SignatureNew
 }
 ```
 

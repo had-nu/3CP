@@ -15,14 +15,14 @@ Block {
   2: h'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6...',  ; StateRoot
   3: h'val1--------------------------------',  ; Proposer
   7: 1784030400000000000,
-  8: [h'[2700-byte sig from val0]', h'[2700-byte sig from val1]', h'[2700-byte sig from val2]'],
+  8: [h'[3309-byte sig from val0]', h'[3309-byte sig from val1]', h'[3309-byte sig from val2]'],
   9: [h'[1952-byte pk val0]', h'[1952-byte pk val1]', h'[1952-byte pk val2]', h'[1952-byte pk val3]'],
   10: {0: 4, 1: 3},  ; TotalValidators=4, RequiredSigs=3
   11: h'blockhash5................................',
   12: 2,                    ; ProtocolVersion
   13: h'0xe0',              ; Bitmap: val0,val1,val2 signed (bits 0,1,2)
   14: [h'[sig0]', h'[sig1]', h'[sig2]'],
-  15: h'[2700-byte CommitSig from val1]',
+  15: h'[3309-byte CommitSig from val1]',
 }
 ```
 
