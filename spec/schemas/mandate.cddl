@@ -13,7 +13,7 @@ mandate-entry = {
   7 => [* rule],                   ; Rules
   8 => bytes .size 32,             ; PolicyHash (BLAKE3-256 of the anchoring policy document)
   9 => bytes,                      ; PolicyURI (URI string to the full policy text; OPTIONAL)
-  10 => bytes .size 2700,          ; Signature (Dilithium3 from Authority over canonical CBOR excluding this field)
+  10 => bytes .size 3309,          ; Signature (Dilithium3 from Authority over canonical CBOR excluding this field)
 }
 
 rule = {

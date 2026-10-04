@@ -64,7 +64,7 @@ document are to be interpreted as described in [RFC 2119](https://tools.ietf.org
 
 - Public key size: 1,952 bytes
 - Private key size: 4,032 bytes
-- Signature size: 2,700 bytes
+- Signature size: 3.309 bytes
 - NIST security level: 3 (AES-192 equivalent)
 
 **[MUST]** All protocol signatures use Dilithium3 unless explicitly stated otherwise.
@@ -140,8 +140,8 @@ Block {
     ;; v2.0 fields (new, MUST in v2 networks)
     12 => uint16,                     ; ProtocolVersion (default: 2)
     13 => bytes,                      ; PrepareSigsBitmap (bitfield, N bits)
-    14 => [* bytes .size 2700],       ; PrepareSigsPayload (active signers only)
-    15 => bytes .size 2700,           ; CommitSig (leader's commit signature)
+    14 => [* bytes .size 3309],       ; PrepareSigsPayload (active signers only)
+    15 => bytes .size 3309,           ; CommitSig (leader's commit signature)
     16 => [* tstr],                   ; ExternalAnchors (publication URIs/CIDs)
     17 => uint64,                     ; KeyRotationEpoch (reference cycle for active keys)
 }
@@ -322,8 +322,8 @@ key-rotation-entry = {
     21 => bytes .size 32,    ; NewVRFPublicKey
     22 => uint64,             ; EffectiveCycle
     23 => uint64,             ; ExpiryCycle
-    24 => bytes .size 2700,  ; SignatureOld (Dilithium3 with old key)
-    25 => bytes .size 2700,  ; SignatureNew (Dilithium3 with new key)
+    24 => bytes .size 3309,  ; SignatureOld (Dilithium3 with old key)
+    25 => bytes .size 3309,  ; SignatureNew (Dilithium3 with new key)
 }
 ```
 

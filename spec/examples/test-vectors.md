@@ -61,8 +61,8 @@ Block {
   BlockHash:           9034d8157f01e4c2f742a4b2584ad971d4b4463c95e3fd7832c33771cbe84bd1
   ProtocolVersion:     2                              ; Key 12
   PrepareSigsBitmap:   0x01                           ; Key 13 — bit 0 set (single validator)
-  PrepareSigsPayload:  [1 Dilithium3 signature, 2700 bytes] ; Key 14
-  CommitSig:           1 Dilithium3 signature, 2700 bytes       ; Key 15
+  PrepareSigsPayload:  [1 Dilithium3 signature, 3309 bytes] ; Key 14
+  CommitSig:           1 Dilithium3 signature, 3309 bytes       ; Key 15
   ExternalAnchors:     ["ipfs://QmGenesis...", "file:///var/3cp/blocks/0.cbor"] ; Key 16
   KeyRotationEpoch:    0                              ; Key 17
 }
@@ -228,7 +228,7 @@ MandateEntry {
       MaxDeferralSec:     0
   PolicyHash:   b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b
   PolicyURI:    "https://example.com/policies/cra-release-gate-v1.pdf"
-  Signature:    [2700-byte Dilithium3 signature]
+  Signature:    [3309-byte Dilithium3 signature]
 }
 ```
 
@@ -312,8 +312,8 @@ Block {
 | 11 | BlockHash | SHA-256 of preimage | Excludes keys 12-17 |
 | 12 | ProtocolVersion | 2 | v2.0 |
 | 13 | PrepareSigsBitmap | `0xe0` (binary `11100000`) | Bits 0,1,2 = 1 (val0,val1,val2) |
-| 14 | PrepareSigsPayload | 3 × 2700-byte sigs | Only active signers, in index order |
-| 15 | CommitSig | 2700 bytes | Leader (val0) signs H(B_final) |
+| 14 | PrepareSigsPayload | 3 × 3309-byte sigs | Only active signers, in index order |
+| 15 | CommitSig | 3309 bytes | Leader (val0) signs H(B_final) |
 | 16 | ExternalAnchors | 2 URIs | IPFS + local filesystem |
 | 17 | KeyRotationEpoch | 0 | No rotation yet |
 
@@ -331,8 +331,8 @@ key-rotation-entry {
   21: h'[32-byte VRF PK]',             ; NewVRFPublicKey
   22: 15,                              ; EffectiveCycle
   23: 25,                              ; ExpiryCycle
-  24: h'[2700-byte sig with OLD key]', ; SignatureOld
-  25: h'[2700-byte sig with NEW key]', ; SignatureNew
+  24: h'[3309-byte sig with OLD key]', ; SignatureOld
+  25: h'[3309-byte sig with NEW key]', ; SignatureNew
 }
 ```
 
@@ -366,7 +366,7 @@ Given block `B` (index 1) and trusted `ValidatorSet_V` (obtained from Anchor Pub
 - All BLAKE3 hashes use BLAKE3-256 (32-byte output).
 - Timestamps are UnixNano (`time.UnixNano()`).
 - The genesis block uses single-node mode (QuorumConfig 1/1) for simplicity.
-- For multi-node, `PrepareSigsPayload` contains `ceil(2N/3)` × 2700-byte Dilithium3 signatures.
+- For multi-node, `PrepareSigsPayload` contains `ceil(2N/3)` × 3309-byte Dilithium3 signatures.
 - Binary values are hex-encoded. The canonical representation is raw bytes.
 - Key 8 is `null` in all v2.0 blocks; presence of non-null value MUST cause rejection.
 - `PrepareSigsBitmap` length matches `len(Validators)`; unused high-order bits MUST be zero.

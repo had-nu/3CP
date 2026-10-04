@@ -397,8 +397,8 @@ key-rotation-entry = {
     21 => bytes .size 32,    ; NewVRFPublicKey
     22 => uint64,            ; EffectiveCycle
     23 => uint64,            ; ExpiryCycle
-    24 => bytes .size 2700, ; SignatureOld (Dilithium3 com chave antiga)
-    25 => bytes .size 2700, ; SignatureNew (Dilithium3 com chave nova)
+    24 => bytes .size 3309, ; SignatureOld (Dilithium3 com chave antiga)
+    25 => bytes .size 3309, ; SignatureNew (Dilithium3 com chave nova)
 }
 ```
 
@@ -420,7 +420,7 @@ O 3CP usa **primitivas criptográficas pós-quânticas** padronizadas pelo NIST:
 
 | **Primitiva** | **Algoritmo** | **Uso no 3CP** | **Tamanho** | **Nível de Segurança (NIST)** | **Referência** |
 |---------------|---------------|----------------|-------------|--------------------------------|---------------|
-| **Assinaturas** | ML-DSA-65 (Dilithium3) | Assinaturas de blocos, entradas, Mandates | PK: 1.952B, Sig: 2.700B | Nível 3 (AES-192) | [7](https://csrc.nist.gov/publications/detail/fips/204/final) |
+| **Assinaturas** | ML-DSA-65 (Dilithium3) | Assinaturas de blocos, entradas, Mandates | PK: 1.952B, Sig: 3.309B | Nível 3 (AES-192) | [7](https://csrc.nist.gov/publications/detail/fips/204/final) |
 | **KEM** | ML-KEM-1024 (Kyber1024) | Handshake seguro entre pares | PK: 1.568B, CT: 1.568B | Nível 5 | [6](https://csrc.nist.gov/publications/detail/fips/203/final) |
 | **VRF** | ECVRF-EDWARDS25519-SHA512-Elligator2 | Eleição de líder | PK: 32B, Proof: 96B | Nível 3 | [4](https://datatracker.ietf.org/doc/html/rfc9381) |
 | **Hash** | BLAKE3-256 | Hash de entradas, SMT, BlockHash | 32B | Nível 3 | [30](https://github.com/BLAKE3-team/BLAKE3-specs) |

@@ -76,7 +76,7 @@ BlockHash = SHA-256(
 |-----------|-------|
 | Algorithm | ML-DSA-65 (Dilithium3) |
 | Public key | 1952 bytes |
-| Signature | 2700 bytes |
+| Signature | 3309 bytes |
 | Security level | NIST Level 3 (AES-192 equivalent) |
 
 - **Use:** client authentication (`SubmitHash`), block proposer/validator
@@ -139,7 +139,7 @@ Implementation: `pkg/identity/cbor.go` (`CanonicalEncOptions().EncMode()`).
 
 | Operation | Dominant cost | Notes |
 |-----------|---------------|-------|
-| Dilithium3 sign/verify | CPU | ~2700-byte signatures; hot path during co-signing |
+| Dilithium3 sign/verify | CPU | ~3309-byte signatures; hot path during co-signing |
 | Kyber1024 encaps/decaps | CPU | Handshake only |
 | VRF prove/verify | CPU | Per cycle, per peer |
 | BLAKE3 | CPU/memory | SMT insert/verify (256-deep path) |

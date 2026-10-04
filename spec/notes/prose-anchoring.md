@@ -44,7 +44,7 @@ CBOR with integer field keys.
 | 5 | `Anchored` | []ProvenanceEntry | Entries anchored in this block |
 | 6 | `Lambda1` | float64 | λ₁ at block time |
 | 7 | `Timestamp` | int64 | UnixNano at finalization |
-| 8 | `Sigs` | [][]byte | Dilithium3 signatures (2700 bytes each) |
+| 8 | `Sigs` | [][]byte | Dilithium3 signatures (3309 bytes each) |
 | 9 | `Validators` | [][]byte | Dilithium3 public keys (1952 bytes each) |
 | 10 | `Quorum` | QuorumConfig | Threshold configuration |
 | 11 | `BlockHash` | []byte(32) | SHA-256 per [cryptography](cryptography.md) §1.2 |
@@ -59,7 +59,7 @@ CBOR with integer field keys.
 | 3 | `Label` | string | OPTIONAL, SHOULD be ≤ 256 bytes |
 | 4 | `Approver` | []byte | OPTIONAL |
 | 5 | `Reference` | []byte(32) | OPTIONAL, links a related entry |
-| 6 | `Signature` | []byte(2700) | OPTIONAL Dilithium3 signature over entry content (§7.2.1) |
+| 6 | `Signature` | []byte(3309) | OPTIONAL Dilithium3 signature over entry content (§7.2.1) |
 | 7 | `MandateRef` | []byte(32) | OPTIONAL, hash of the MandateEntry (§13) |
 
 ## QuorumConfig (spec §4.3)
@@ -123,7 +123,7 @@ classes require anchoring. A Mandate is itself a `ProvenanceEntry` (hash of its
 | 7 | `Rules` | []Rule | Anchoring requirements |
 | 8 | `PolicyHash` | [32]byte | BLAKE3-256 of external policy document |
 | 9 | `PolicyURI` | string | OPTIONAL policy URI |
-| 10 | `Signature` | []byte(2700) | Dilithium3 signature by `Authority` over keys 0–9 |
+| 10 | `Signature` | []byte(3309) | Dilithium3 signature by `Authority` over keys 0–9 |
 
 ### Rule (spec §4.4.1)
 

@@ -90,7 +90,7 @@ The `anchored[*].Hash` entries MUST be in the same order as the block's
 |-----------|-------|
 | Algorithm | ML-DSA-65 (Dilithium3) |
 | Public key size | 1952 bytes |
-| Signature size | 2700 bytes |
+| Signature size | 3309 bytes |
 | Security level | NIST Level 3 (AES-192 equivalent) |
 
 Conformant implementations MUST use the same parameter set. Private keys are
@@ -159,7 +159,7 @@ Blocks are serialized as CBOR with integer field keys.
 | 5 | `Anchored` | []ProvenanceEntry | Entries anchored in this block |
 | 6 | `Lambda1` | float64 | Laplacian eigenvalue λ₁ at block time (network diffusion metric) |
 | 7 | `Timestamp` | int64 | UnixNano at block finalization |
-| 8 | `Sigs` | [][]byte | Dilithium3 signatures (each 2700 bytes) |
+| 8 | `Sigs` | [][]byte | Dilithium3 signatures (each 3309 bytes) |
 | 9 | `Validators` | [][]byte | Dilithium3 public keys (each 1952 bytes) of the validator set |
 | 10 | `Quorum` | QuorumConfig | Threshold configuration |
 | 11 | `BlockHash` | []byte (32) | SHA-256 per §3.2. Computed by proposer; verified by every peer before signing |
@@ -174,7 +174,7 @@ Blocks are serialized as CBOR with integer field keys.
 | 3 | `Label` | string | Human-readable label (OPTIONAL, SHOULD be ≤ 256 bytes) |
 | 4 | `Approver` | []byte | Who approved/accepted the residual risk (OPTIONAL) |
 | 5 | `Reference` | []byte (32) | Hash of a related entry (OPTIONAL). Enables cross-entry linking |
-| 6 | `Signature` | []byte (2700) | Dilithium3 signature from Submitter (and Approver, if present) over the entry content (OPTIONAL). See §7.2.1 for signed payload format |
+| 6 | `Signature` | []byte (3309) | Dilithium3 signature from Submitter (and Approver, if present) over the entry content (OPTIONAL). See §7.2.1 for signed payload format |
 | 7 | `MandateRef` | []byte (32) | Hash of the MandateEntry under which this entry was submitted (OPTIONAL). See §4.4 and §13 |
 
 ### 4.3 QuorumConfig
@@ -207,7 +207,7 @@ SMT proof, and third-party verifiability.
 | 7 | `Rules` | []Rule | Zero or more rules defining anchoring requirements |
 | 8 | `PolicyHash` | [32]byte | BLAKE3-256 of the external anchoring policy document (see `PolicyURI`) |
 | 9 | `PolicyURI` | string | OPTIONAL. URI to the full policy text |
-| 10 | `Signature` | []byte (2700) | Dilithium3 signature from `Authority` over the canonical CBOR of keys 0–9 |
+| 10 | `Signature` | []byte (3309) | Dilithium3 signature from `Authority` over the canonical CBOR of keys 0–9 |
 
 #### 4.4.1 Rule
 
@@ -325,7 +325,7 @@ The proposer:
    - value = entry.Hash (32 bytes)
 4. Computes `StateRoot` from the updated SMT
 5. Computes `BlockHash` per §3.2
-6. Signs `BlockHash` with its Dilithium3 private key → signature (2700 bytes)
+6. Signs `BlockHash` with its Dilithium3 private key → signature (3309 bytes)
 7. Broadcasts the block + its signature via gossip
 
 #### 6.3.3 Non-Proposer Verification

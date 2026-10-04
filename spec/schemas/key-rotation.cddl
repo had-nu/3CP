@@ -14,6 +14,6 @@ key-rotation-entry = {
     21 => bytes .size 32,    ; NewVRFPublicKey (Ristretto255 point)
     22 => uint64,             ; EffectiveCycle (first cycle with new key)
     23 => uint64,             ; ExpiryCycle (last cycle old key signs)
-    24 => bytes .size 2700,  ; SignatureOld (Dilithium3 with current key)
-    25 => bytes .size 2700,  ; SignatureNew (Dilithium3 with NewPublicKey)
+    24 => bytes .size 3309,  ; SignatureOld (Dilithium3 with current key)
+    25 => bytes .size 3309,  ; SignatureNew (Dilithium3 with NewPublicKey)
 }
