@@ -133,7 +133,7 @@ Block {
     6  => float64,                    ; Lambda1 (Fiedler eigenvalue)
     7  => int64,                      ; Timestamp (UnixNano)
     8  => null,                       ; RESERVED in ProtocolVersion == 2 (was Sigs in v1.0)
-    9  => [* bytes .size 1952],      ; Validators (Dilithium3 public keys)
+    9  => [* validator-info],        ; Validators (canonical set, see §7.1)
     10 => quorum-config,              ; Quorum
     11 => bytes .size 32,            ; BlockHash (SHA-256)
 

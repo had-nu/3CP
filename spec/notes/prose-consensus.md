@@ -100,7 +100,7 @@ broadcasts its co-signature. Root mismatch is verified at
 
 ### 4. Quorum Verification (spec §6.3.4)
 
-For each signature in `block.Sigs`, iterate `block.Validators`, skip
+For each signature in `block.PrepareSigsPayload`, iterate `block.Validators`, skip
 already-credited validators, verify against `block.BlockHash`, and credit the
 first match (marking that key used). After processing, if
 `usedValidatorCount < quorum.RequiredSigs`, the block MUST NOT be appended. Each

@@ -7,11 +7,11 @@ block = {
   1 => bytes .size 32,             ; PrevHash (BLAKE3-256)
   2 => bytes .size 32,             ; StateRoot (SMT root)
   3 => bytes .size 16,             ; Proposer (RootID)
-  4 => [3 * bytes],                ; Triad (reserved)
+  ? 4 => [3 * bytes],              ; Triad (reserved; omitted in v2, see genesis.cddl)
   5 => [* provenance-entry],       ; Anchored entries
   6 => float64,                    ; Lambda1 (Laplacian eigenvalue)
   7 => int64,                      ; Timestamp (UnixNano)
-  8 => null,                       ; RESERVED in ProtocolVersion == 2 (was Sigs in v1.0)
+  ? 8 => null,                     ; RESERVED in ProtocolVersion == 2 (was Sigs in v1.0)
   9 => [* validator-info],         ; Validators (canonical validator set, see §7.1)
   10 => quorum-config,             ; Quorum
   11 => bytes .size 32,            ; BlockHash (SHA-256)
