@@ -131,8 +131,8 @@ Block {
     5  => [* provenance-entry],       ; Anchored entries
     6  => float64,                    ; Lambda1 (autovalor de Fiedler)
     7  => int64,                     ; Timestamp (UnixNano)
-    8  => [* bytes .size 3309],      ; Sigs (assinaturas de bloco — ver §5.3)
-    9  => [* bytes .size 1952],      ; Validators (chaves públicas dos validadores)
+    8  => null,                      ; RESERVED em ProtocolVersion == 2 (era Sigs na v1.0)
+    9  => [* validator-info],        ; Validators (conjunto canônico; ver §7.1)
     10 => quorum-config,              ; Quorum
     11 => bytes .size 32,            ; BlockHash (SHA-256)
 
@@ -148,7 +148,9 @@ Block {
 
 ### 5.3 Semântica dos Campos de Assinatura v2.0
 
-**[MUST]** O campo `Sigs` (key 8) na v2.0 contém as assinaturas PREPARE coletadas pelo líder. Na v1.0, este campo continha assinaturas de validadores sem distinção de fase. Na v2.0, a distinção é obrigatória.
+**[MUST]** A key 8 é `RESERVED` em `ProtocolVersion == 2` e MUST NOT carregar assinaturas. Na v1.0 ela era `Sigs`, com assinaturas de validadores sem distinção de fase; na v2.0 a distinção de fase passa a ser obrigatória e as assinaturas PREPARE têm endereço próprio (key 14). A posição 8 é preservada para que a numeração de chaves permaneça estável entre as duas versões.
+
+**[MUST]** `PrepareSigsPayload` (key 14) é o **único** campo de assinaturas PREPARE em `ProtocolVersion == 2`. Um verificador MUST NOT aceitar assinaturas PREPARE de nenhuma outra chave.
 
 **[MUST]** `PrepareSigsBitmap` é um bitfield onde o bit `i` é `1` se e somente se o validador de índice `i` no array `Validators` assinou PREPARE.
 
@@ -468,7 +470,7 @@ GetMerkleProof(key: bytes .size 32, blockIndex: uint64) -> SMTProof
 
 **[MUST]** Um light client verifica um bloco `B` sem executar consenso:
 1. Obtém `ValidatorSet` do ciclo `B.Index`.
-2. Verifica que `B.PrepareSigs` contém `Q = ceil(2N/3)` assinaturas válidas contra as chaves do `ValidatorSet`.
+2. Verifica que `B.PrepareSigsPayload` contém `Q = ceil(2N/3)` assinaturas válidas contra as chaves do `ValidatorSet`, mapeando cada entrada para o validador pelo bit correspondente em `B.PrepareSigsBitmap`.
 3. Verifica `B.CommitSig` contra `B.Proposer`.
 4. Verifica a cadeia de `PrevHash`.
 
@@ -635,7 +637,7 @@ genesis-block = {
     5 => [* provenance-entry],       ; Anchored (GenesisMandate)
     6 => float64,                    ; Lambda1
     7 => int64,                      ; Timestamp
-    9 => [* bytes .size 1952],       ; Validators (GenesisValidatorSet)
+    9 => [* genesis-validator-info],  ; Validators (conjunto canônico; ver §7.1)
     10 => quorum-config,              ; Quorum
     11 => bytes .size 32,            ; BlockHash
     12 => uint16,                     ; ProtocolVersion: 2

@@ -7,12 +7,12 @@ block = {
   1 => bytes .size 32,             ; PrevHash (BLAKE3-256)
   2 => bytes .size 32,             ; StateRoot (SMT root)
   3 => bytes .size 16,             ; Proposer (RootID)
-  4 => [3 * bytes],                ; Triad (reserved)
+  ? 4 => [3 * bytes],              ; Triad (reserved; omitted in v2, see genesis.cddl)
   5 => [* provenance-entry],       ; Anchored entries
   6 => float64,                    ; Lambda1 (Laplacian eigenvalue)
   7 => int64,                      ; Timestamp (UnixNano)
-  8 => null,                       ; RESERVED in ProtocolVersion == 2 (was Sigs in v1.0)
-  9 => [* bytes .size 1952],       ; Validators (Dilithium3 public keys)
+  ? 8 => null,                     ; RESERVED in ProtocolVersion == 2 (was Sigs in v1.0)
+  9 => [* validator-info],         ; Validators (canonical validator set, see §7.1)
   10 => quorum-config,             ; Quorum
   11 => bytes .size 32,            ; BlockHash (SHA-256)
 
@@ -23,6 +23,15 @@ block = {
   15 => bytes .size 3309,           ; CommitSig (leader's commit signature)
   16 => [* tstr],                   ; ExternalAnchors (URIs/CIDs of publication)
   17 => uint64,                     ; KeyRotationEpoch (reference cycle for active keys)
+  18 => bytes .size 32,             ; LegacyAnchor (H(B_final v1.0); genesis only, §16)
+  19 => {* tstr => bytes},          ; Metadata (e.g. "3cp:degraded-block", §5.5)
+}
+
+validator-info = {
+  0 => bytes .size 16,             ; ValidatorID (RootID)
+  1 => bytes .size 1952,           ; Dilithium3PK
+  2 => bytes .size 32,             ; VRFPK
+  3 => bytes .size 32,             ; ContractHash (optional)
 }
 
 provenance-entry = {
