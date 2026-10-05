@@ -30,7 +30,7 @@ As palavras-chave **MUST**, **MUST NOT**, **REQUIRED**, **SHALL**, **SHALL NOT**
 | 1 | **Consenso** | Eleição VRF + co-assinatura M-de-N sem fases definidas | Duas fases atômicas (PREPARE/COMMIT) com quórum fixo `ceil(2N/3)` |
 | 2 | **ValidatorSet** | Estado de rede continha apenas `UID` e `Status` | Estado de rede obrigatoriamente contém `Dilithium3PK` e `VRFPK` de todos os validadores |
 | 3 | **Rotação de chaves** | Não especificada (out-of-band) | Operação de protocolo via `3cp:key-rotation:v1` |
-| 4 | **Formato de bloco** | Campos v1.0 | Campos v2.0 adicionais: `ProtocolVersion`, `PrepareSigsBitmap`, `PrepareSigs`, `CommitSig`, `ExternalAnchors`, `KeyRotationEpoch` |
+| 4 | **Formato de bloco** | Campos v1.0 | Campos v2.0 adicionais: `ProtocolVersion`, `PrepareSigsBitmap`, `PrepareSigs`, `CommitSig`, `ExternalAnchors`, `KeyRotationEpoch`, `LegacyAnchor`, `Metadata` |
 | 5 | **Ciclo** | Fixo em 3s, entradas descartadas em timeout | Adaptativo (`BaseInterval + EWMA(RTT)`), entradas retidas em aborto |
 | 6 | **Laplaciano λ₁** | Recomputação completa a cada `LambdaInterval` | Atualização incremental (rank-one update) quando topologia não muda |
 | 7 | **Verificabilidade** | Teórica ("cadeia pública") | Protocolo de Light Client e Anchor Publishers obrigatórios |
@@ -526,7 +526,51 @@ seed = HKDF-SHA256(
 
 ---
 
-## 15. Testes de Conformidade v2.0
+## 15. Mandatos
+
+### 15.1 Estrutura
+
+Ver `spec/schemas/mandate.cddl` para a definição CDDL completa.
+
+**[MUST]** Um mandato é uma declaração assinada, versionada e ancorada que define obrigações de ancoragem. O `Authority` é o RootID que o emitiu, `Version` e `PrevVersion` formam a linhagem de revisões, e `Rules` declara as classes de eventos abrangidas.
+
+**[MUST]** O `ID` de um mandato é BLAKE3-256 do CBOR canônico do mandato com `ID` e `Signature` excluídos. Uma implementação MUST recomputá-lo e MUST NOT confiar no valor armazenado: um corpo cujas regras não correspondem ao identificador que apresenta MUST ser rejeitado.
+
+### 15.2 Autenticidade
+
+**[MUST]** O campo `Signature` (chave 10) é uma assinatura Dilithium3 do `Authority` sobre o mesmo payload canônico, com `ID` e `Signature` excluídos.
+
+**[MUST]** Uma implementação MUST verificar esta assinatura antes de aceitar um mandato como política vinculativa, e MUST resolvê-la contra uma chave ML-DSA-65 registada — o ValidatorSet ou o estado de rede. Um mandato cujo `Authority` não resolve para uma chave conhecida MUST ser rejeitado, e uma assinatura ausente ou com tamanho incorreto MUST ser rejeitada antes de qualquer verificação dispendiosa.
+
+Sem esta verificação, `Authority` é uma afirmação: qualquer submissor poderia instalar um mandato em nome de outro RootID, e a rede o trataria como política autêntica. A ausência da assinatura MUST ser tratada como falha de autorização, não como ausência de exigência.
+
+**[MUST]** A vigência (`ValidFrom`, `ValidUntil`) MUST NOT ser imposta no momento da admissão. Um auditor precisa de carregar um mandato expirado para avaliar uma janela que ele cobriu; recusá-lo na entrada apagaria o registo que a auditoria procura.
+
+### 15.3 Fiscalização na Submissão
+
+**[MUST]** Uma entrada que defina `MandateRef` MUST ser verificada contra o mandato que referencia: o mandato MUST existir, estar em vigor no timestamp da entrada, e ter todos os campos que as suas regras exigem.
+
+Uma entrada sem `MandateRef` não faz qualquer afirmação e MUST ser aceite. A maioria das entradas de uma cadeia de proveniência não é governada por nenhum mandato, e rejeitá-las tornaria o mecanismo inutilizável.
+
+Esta meia-fiscalização é estrutural: impede afirmações de conformidade que falham os requisitos mais básicos. NÃO pode deteção de eventos omitidos, porque o protocolo nunca vê um evento que não foi submetido.
+
+### 15.4 Verificação e Fiscalização
+
+Ver `spec/schemas/mandate.cddl` para as estruturas `compliance-verification` e `compliance-gap`.
+
+**[MUST]** Uma implementação MUST oferecer uma operação que verifique a cadeia contra um mandato numa janela de tempo, comparando as entradas ancoradas com as obrigações declaradas.
+
+**[MUST]** A omissão MUST ser criptograficamente detetável: um evento que um mandato exige e que nunca foi ancorado MUST produzir um gap, distinguível de uma entrada presente mas incompleta.
+
+**[MUST]** A verificação MUST NOT derivar o conjunto de validadores do bloco que está a verificar. O conjunto tem de vir de uma âncora de confiança externa — o bloco genesis, um Anchor Publisher, ou um nó completo sob garantia do operador. Um bloco que nomeie os seus próprios validadores é assinável inteiramente por quem o escreveu.
+
+### 15.5 Modo Degraded
+
+**[MUST]** Um mandato é aplicável independentemente do modo de operação. A regra de quorum de §6.5 rege a finalização de blocos, não as obrigações de ancoragem: um mandato MUST NOT ser considerado cumprido com menos do que as suas próprias regras exigem, mesmo que a cadeia esteja em modo degraded.
+
+---
+
+## 16. Testes de Conformidade v2.0
 
 **[MUST]** Implementações que declarem conformidade com 3CP v2.0 devem passar:
 
@@ -547,7 +591,7 @@ seed = HKDF-SHA256(
 
 ---
 
-## 16. Migração v1 → v2
+## 17. Migração v1 → v2
 
 **[MUST]** A migração da v1.0 para a v2.0 é um **hard fork**.
 
@@ -562,7 +606,7 @@ seed = HKDF-SHA256(
 
 ---
 
-## 17. Referências Normativas
+## 18. Referências Normativas
 
 - FIPS 203: Module-Lattice-Based Key-Encapsulation Mechanism Standard (ML-KEM)
 - FIPS 204: Module-Lattice-Based Digital Signature Standard (ML-DSA)
@@ -575,7 +619,7 @@ seed = HKDF-SHA256(
 
 ---
 
-## 18. Apêndice A: CDDLs Completos v2.0
+## 19. Apêndice A: CDDLs Completos v2.0
 
 ### A.1 Bloco (block-v2.cddl)
 
@@ -692,7 +736,7 @@ hash-function = &(
 
 ---
 
-## 19. Apêndice B: Algoritmos Formais
+## 20. Apêndice B: Algoritmos Formais
 
 ### B.1 Seleção de Proposer
 
