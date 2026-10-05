@@ -28,9 +28,26 @@ document are to be interpreted as described in [RFC 2119](https://tools.ietf.org
 
 ---
 
-## 2. System Model and Entities
+## 2. Changelog: v1.0 to v2.0
 
-### 2.1 Entities
+| # | Change | v1.0 | v2.0 |
+|---|--------|------|------|
+| 1 | **Consensus** | VRF election plus M-of-N co-signing, no defined phases | Two atomic phases (PREPARE/COMMIT) with a fixed `ceil(2N/3)` quorum |
+| 2 | **ValidatorSet** | Network state held only `UID` and `Status` | Network state MUST hold `Dilithium3PK` and `VRFPK` for every validator |
+| 3 | **Key rotation** | Unspecified, out of band | A protocol operation via `3cp:key-rotation:v1` |
+| 4 | **Block format** | v1.0 fields | Additional v2.0 fields: `ProtocolVersion`, `PrepareSigsBitmap`, `PrepareSigs`, `CommitSig`, `ExternalAnchors`, `KeyRotationEpoch`, `LegacyAnchor`, `Metadata` |
+| 5 | **Cycle** | Fixed at 3s, entries discarded on timeout | Adaptive (`BaseInterval + EWMA(RTT)`), entries retained on abort |
+| 6 | **Laplacian λ₁** | Full recomputation every `LambdaInterval` | Incremental rank-one update when the topology is unchanged |
+| 7 | **Verifiability** | Theoretical ("public chain") | A Light Client protocol and Anchor Publishers are mandatory |
+| 8 | **ZK** | A conceptual mention of CARCOSA | A versioned `ZKBridge` interface (v1.0.0) specified as a protocol contract |
+| 9 | **Identity** | 32-byte `FEntropy`, derivation not normalised | Derivation via `HKDF-SHA256(salt=NetworkID, ...)` with a minimum of 128 bits of entropy |
+| 10 | **Conformance** | 33 operational tests | Suite extended with adversarial BFT tests (12 minimum cases) |
+
+---
+
+## 3. System Model and Entities
+
+### 3.1 Entities
 
 - **Submitter:** Entity submitting a `ProvenanceEntry` for anchoring. Need not be a validator.
 - **Validator:** Entity participating in consensus, producing and co-signing blocks. Each validator possesses a Dilithium3 key pair and a VRF key pair.
@@ -38,7 +55,7 @@ document are to be interpreted as described in [RFC 2119](https://tools.ietf.org
 - **Light Client:** Entity verifying blocks and SMT proofs without participating in consensus or maintaining full state.
 - **Auditor:** Entity verifying Mandate conformance against the anchored entry chain.
 
-### 2.2 Threat Model
+### 3.2 Threat Model
 
 - **A1 — Network adversary:** Observes, delays, drops, or reorders messages. Does not control validator keys.
 - **A2 — Compromised operator:** Controls infrastructure of one or more nodes, but less than quorum (`< ceil(2N/3)`).
@@ -48,9 +65,9 @@ document are to be interpreted as described in [RFC 2119](https://tools.ietf.org
 
 ---
 
-## 3. Cryptographic Primitives
+## 4. Cryptographic Primitives
 
-### 3.1 Hash Functions
+### 4.1 Hash Functions
 
 | Function | Output | Use |
 |----------|--------|-----|
@@ -58,7 +75,7 @@ document are to be interpreted as described in [RFC 2119](https://tools.ietf.org
 | `SHA-256` | 32 bytes | `BlockHash` (block identifier) |
 | `HKDF-SHA256` | Variable | Key derivation, UID0 seeds |
 
-### 3.2 Signatures
+### 4.2 Signatures
 
 **Algorithm:** ML-DSA-65 (Dilithium3), per FIPS 204.
 
@@ -69,7 +86,7 @@ document are to be interpreted as described in [RFC 2119](https://tools.ietf.org
 
 **[MUST]** All protocol signatures use Dilithium3 unless explicitly stated otherwise.
 
-### 3.3 VRF (Verifiable Random Function)
+### 4.3 VRF (Verifiable Random Function)
 
 **Algorithm:** ECVRF over Ristretto255, suite string `ristretto255_XMD:SHA-512_R255MAP_RO_`.
 
@@ -91,11 +108,11 @@ p1    = Elligator2Map(h1)
 Gamma_base = p0 + p1
 ```
 
-This is a 2-point Elligator2 sum, not the single-point map of RFC 9381 §5.4.1.2. **[MUST]** Every conformant implementation MUST replicate exactly this 2-point procedure for interoperability.
+This is a 2-point Elligator2 sum, not the single-point map of RFC 9381 §4.1.2. **[MUST]** Every conformant implementation MUST replicate exactly this 2-point procedure for interoperability.
 
 **[MUST]** Nonce derivation in the Schnorr proof MUST be deterministic via HMAC-SHA512 with the VRF private key as HMAC key. Challenge and response follow Schnorr-style construction (not IETF ECVRF-EDWARDS25519 bitwise challenge/response).
 
-### 3.4 KEM (Key Encapsulation Mechanism)
+### 4.4 KEM (Key Encapsulation Mechanism)
 
 **Algorithm:** ML-KEM-1024 (Kyber1024), per FIPS 203.
 
@@ -105,7 +122,7 @@ This is a 2-point Elligator2 sum, not the single-point map of RFC 9381 §5.4.1.2
 
 **[MUST]** Used exclusively for secure transport handshake between peers (Kyber encapsulate/decapsulate + AEAD).
 
-### 3.5 AEAD
+### 4.5 AEAD
 
 **Algorithm:** ChaCha20-Poly1305 (RFC 8439).
 
@@ -113,13 +130,13 @@ This is a 2-point Elligator2 sum, not the single-point map of RFC 9381 §5.4.1.2
 
 ---
 
-## 4. Block Format v2.0
+## 5. Block Format v2.0
 
-### 4.1 Encoding
+### 5.1 Encoding
 
 **[MUST]** All blocks and entries are serialized in canonical CBOR (RFC 8949), per CBOR section 4.2.1.
 
-### 4.2 Block Structure
+### 5.2 Block Structure
 
 ```
 Block {
@@ -133,7 +150,7 @@ Block {
     6  => float64,                    ; Lambda1 (Fiedler eigenvalue)
     7  => int64,                      ; Timestamp (UnixNano)
     8  => null,                       ; RESERVED in ProtocolVersion == 2 (was Sigs in v1.0)
-    9  => [* validator-info],        ; Validators (canonical set, see §7.1)
+    9  => [* validator-info],        ; Validators (canonical set, see §8.1)
     10 => quorum-config,              ; Quorum
     11 => bytes .size 32,            ; BlockHash (SHA-256)
 
@@ -147,7 +164,7 @@ Block {
 }
 ```
 
-### 4.3 Signature Field Semantics
+### 5.3 Signature Field Semantics
 
 **[MUST]** Key 8 (`Sigs` in v1.0) is **reserved and MUST NOT be used** in blocks with `ProtocolVersion == 2`. A block with `ProtocolVersion == 2` and key 8 present and non-null **MUST** be rejected with `ErrReservedFieldPresent`.
 
@@ -157,9 +174,9 @@ Block {
 
 **[MUST]** `CommitSig` (key 15) is the leader's Dilithium3 signature over the final block hash `H(B_final)` (including `PrepareSigsBitmap` and `PrepareSigsPayload`).
 
-**[MUST]** A node operating with `ProtocolVersion == 1` (legacy network) continues to interpret key 8 per `spec/3CP.md` semantics. Key 8 never has two meanings within the same network: v1→v2 migration is a hard fork (§15), not a gradual field-semantics transition.
+**[MUST]** A node operating with `ProtocolVersion == 1` (legacy network) continues to interpret key 8 per `spec/3CP.md` semantics. Key 8 never has two meanings within the same network: v1→v2 migration is a hard fork (§16), not a gradual field-semantics transition.
 
-### 4.4 BlockHash Calculation
+### 5.4 BlockHash Calculation
 
 **[MUST]** `BlockHash` is computed as:
 
@@ -179,15 +196,15 @@ BlockHash = SHA-256(
 
 ---
 
-## 5. Two-Phase BFT Consensus
+## 6. Two-Phase BFT Consensus
 
-### 5.1 Consensus Cycle
+### 6.1 Consensus Cycle
 
 A **cycle** is the atomic time unit of the protocol. Each cycle `c` produces zero or one final block of index `c`.
 
 **[MUST]** The cycle is divided into two atomic phases: PREPARE and COMMIT.
 
-### 5.2 PREPARE Phase
+### 6.2 PREPARE Phase
 
 **Input:** Network state at cycle `c` start, pending entries `E`, validator set `V`.
 
@@ -229,7 +246,7 @@ Each validator `v_j` receives `B` and verifies:
 
 If all checks pass, `v_j` signs `H(B)` and broadcasts `PREPARE-SIG_j`.
 
-### 5.3 COMMIT Phase
+### 6.3 COMMIT Phase
 
 **Step 4 — Quorum Collection:**
 The leader collects `PREPARE-SIG_j` until reaching `Q = ceil(2N/3)`.
@@ -250,14 +267,14 @@ The leader broadcasts `B_final`. Each validator `v_j` verifies:
 
 If all checks pass, `v_j` accepts `B_final` as the final block of cycle `c`, appends to local chain, and transitions network state.
 
-### 5.4 Aborted Cycle
+### 6.4 Aborted Cycle
 
 **[MUST]** If a cycle aborts (PREPARE timeout, insufficient quorum, or `λ₁ < MinLambda1`):
 - No block is appended.
 - Entries `E` remain in the pending queue.
 - Cycle `c+1` starts with new VRF election using `alpha_{c+1} = (c+1) || H(B_{c-1})`.
 
-### 5.5 Degraded Mode
+### 6.5 Degraded Mode
 
 **[MUST]** If `N < 4`, the protocol operates in `degraded` mode:
 - `Q = 1` (any single signature suffices).
@@ -266,9 +283,9 @@ If all checks pass, `v_j` accepts `B_final` as the final block of cycle `c`, app
 
 ---
 
-## 6. Network State and ValidatorSet
+## 7. Network State and ValidatorSet
 
-### 6.1 GenesisValidatorSet
+### 7.1 GenesisValidatorSet
 
 **[MUST]** The genesis block (index 0) contains a `GenesisValidatorSet`:
 
@@ -285,7 +302,7 @@ validator-info = {
 
 **[MUST]** The `GenesisValidatorSet` is immutable. Validator set changes (addition, removal, key rotation) occur via subsequent protocol entries.
 
-### 6.2 NodeState
+### 7.2 NodeState
 
 **[MUST]** Network state (`NetworkState`) maintains for each known node:
 
@@ -303,9 +320,9 @@ NodeState = {
 
 ---
 
-## 7. Key Rotation
+## 8. Key Rotation
 
-### 7.1 EventClass `3cp:key-rotation:v1`
+### 8.1 EventClass `3cp:key-rotation:v1`
 
 **[MUST]** The protocol defines a key-rotation entry:
 
@@ -327,7 +344,7 @@ key-rotation-entry = {
 }
 ```
 
-### 7.2 Validation Rules
+### 8.2 Validation Rules
 
 **[MUST]** A `key-rotation-entry` is valid iff:
 1. `SignatureOld` verifies against the `Submitter`'s active `Dilithium3PK` in the current cycle's state.
@@ -336,7 +353,7 @@ key-rotation-entry = {
 4. `ExpiryCycle >= EffectiveCycle + MinKeyOverlap` (default: 10).
 5. `EffectiveCycle > lastRotationCycle` of the same validator (prohibits overlapping rotations).
 
-### 7.3 Overlap Period
+### 8.3 Overlap Period
 
 During `[EffectiveCycle, ExpiryCycle]`:
 - Both old and new keys are accepted for block verification.
@@ -346,9 +363,9 @@ During `[EffectiveCycle, ExpiryCycle]`:
 
 ---
 
-## 8. Sparse Merkle Tree (SMT)
+## 9. Sparse Merkle Tree (SMT)
 
-### 8.1 Parameters
+### 9.1 Parameters
 
 - **Depth:** 256
 - **Leaf hash:** `BLAKE3("leaf" || key || value)`
@@ -356,11 +373,11 @@ During `[EffectiveCycle, ExpiryCycle]`:
 - **Key:** `entry.Hash` (32 bytes)
 - **Value:** `entry.Hash` (32 bytes)
 
-### 8.2 Inclusion Proof
+### 9.2 Inclusion Proof
 
 **[MUST]** An SMT proof is an array of 256 32-byte hashes (8,192 bytes total), representing siblings on the path from leaf to root.
 
-### 8.3 Verification
+### 9.3 Verification
 
 ```
 function VerifySMTProof(root, key, value, proof):
@@ -377,9 +394,9 @@ function VerifySMTProof(root, key, value, proof):
 
 ---
 
-## 9. Adaptive Cycle and Entry Retention
+## 10. Adaptive Cycle and Entry Retention
 
-### 9.1 Cycle Duration
+### 10.1 Cycle Duration
 
 **[MUST]** Cycle duration is adaptive:
 
@@ -394,27 +411,27 @@ Where:
 - `MaxCycleDuration`: 10,000ms (protocol hard cap)
 - `EWMA(RTT)`: exponential moving average of round-trip time between peers
 
-### 9.2 Pending Entry Retention
+### 10.2 Pending Entry Retention
 
 **[MUST]** Pending entries are **never discarded** due to cycle expiration.
 
 **[MUST]** Entries pending for more than `MaxPendingTTL` cycles (default: 100) are rejected with error `ErrPendingExpired`.
 
-### 9.3 Empty Cycle
+### 10.3 Empty Cycle
 
 **[MAY]** If `SkipEmptyCycles == true` (configurable by Mandate) and no entries are pending, the cycle may be skipped without block production.
 
 ---
 
-## 10. Laplacian λ₁ Calculation
+## 11. Laplacian λ₁ Calculation
 
-### 10.1 Definition
+### 11.1 Definition
 
 The network graph is represented by adjacency matrix `A`, where `A[i][j] = Status_j` if node `i` knows node `j`. Laplacian `L = D - A`, where `D` is the diagonal degree matrix.
 
 `λ₁` is the smallest non-zero eigenvalue of `L` (Fiedler eigenvalue).
 
-### 10.2 Incremental Update
+### 11.2 Incremental Update
 
 **[MUST]** If no nodes were added or removed between consecutive cycles, and only `Status` values of existing nodes changed, the implementation MUST use **rank-one update** on the Laplacian instead of full reconstruction.
 
@@ -423,7 +440,7 @@ The network graph is represented by adjacency matrix `A`, where `A[i][j] = Statu
 - `LambdaInterval` cycles have passed without full recomputation.
 - State was marked `dirty` by structural change.
 
-### 10.3 Algorithm for N > 100
+### 11.3 Algorithm for N > 100
 
 **[MUST]** For `N > 100`, the protocol permits approximation via **Lanczos method** with iterations:
 
@@ -433,15 +450,15 @@ k = min(50, max(30, floor(N / 10)))
 
 **[MUST]** Lanczos stopping criterion MUST include Ritz value convergence check. If convergence occurs before `k` iterations, computation MAY stop early.
 
-### 10.4 Fragmentation
+### 11.4 Fragmentation
 
 **[MUST]** If `λ₁ < MinLambda1` and `N >= 2`, the current cycle is aborted and the network enters `fragmented` state until `λ₁` recovers or nodes are removed.
 
 ---
 
-## 11. Third-Party Verifiability
+## 12. Third-Party Verifiability
 
-### 11.1 Anchor Publishers
+### 12.1 Anchor Publishers
 
 **[MUST]** An Anchor Publisher publishes final blocks to public-readable storage:
 
@@ -458,7 +475,7 @@ AnchorPublisherConfig = {
 - IPFS (CIDv1, codec `raw`, hash `blake3-256` or `sha2-256`)
 - S3-compatible blob store (with SHA-256 checksum)
 
-### 11.2 Light Client Protocol
+### 12.2 Light Client Protocol
 
 **[MUST]** The protocol defines read operations for light clients:
 
@@ -477,9 +494,9 @@ GetMerkleProof(key: bytes .size 32, blockIndex: uint64) -> SMTProof
 
 ---
 
-## 12. ZK Bridge Protocol
+## 13. ZK Bridge Protocol
 
-### 12.1 ZKBridge v1.0.0 Interface
+### 13.1 ZKBridge v1.0.0 Interface
 
 **[MUST]** The protocol defines a stable interface for zero-knowledge proof consumers:
 
@@ -493,15 +510,15 @@ ZKBridge v1.0.0 {
 
 **[MUST]** Breaking changes require major version bump. Backward compatibility MUST be maintained for at least 2 major versions.
 
-### 12.2 Hash Functions for ZK Circuits
+### 13.2 Hash Functions for ZK Circuits
 
 **[SHOULD]** ZK circuits consuming 3CP hashes SHOULD use STARK-friendly hash functions (e.g., Poseidon2, Rescue-Prime) for internal circuit hashing, keeping BLAKE3 for external hashing only.
 
 ---
 
-## 13. UID0 Identity Derivation
+## 14. UID0 Identity Derivation
 
-### 13.1 NetworkID
+### 14.1 NetworkID
 
 **[MUST]** `NetworkID` is the BLAKE3-256 hash of the genesis block:
 
@@ -511,7 +528,7 @@ NetworkID = BLAKE3-256(GenesisBlock)
 
 **[MUST]** `NetworkID` is immutable for the chain's lifetime.
 
-### 13.2 Seed Derivation
+### 14.2 Seed Derivation
 
 **[MUST]** The 32-byte seed for identity derivation is:
 
@@ -527,32 +544,47 @@ seed = HKDF-SHA256(
 
 ---
 
-## 14. Mandates
+## 15. Mandates
 
-### 14.1 Mandate Structure
+### 15.1 Structure
 
 See `spec/schemas/mandate.cddl` for the complete CDDL definition.
 
-**[MUST]** Mandates are signed, versioned, anchored declarations defining anchoring obligations. Compliance is verified by comparing the chain against the active mandate set. Omission is cryptographically detectable.
+**[MUST]** A mandate is a signed, versioned, anchored declaration that defines anchoring obligations. `Authority` is the RootID that issued it, `Version` and `PrevVersion` form the revision lineage, and `Rules` declares the event classes it covers.
 
-### 14.2 Compliance Verification
+**[MUST]** A mandate's `ID` is BLAKE3-256 of the canonical CBOR of the mandate with `ID` and `Signature` excluded. An implementation MUST recompute it and MUST NOT trust the stored value: a body whose rules differ from the identifier it presents MUST be rejected.
 
-See `spec/schemas/mandate.cddl` for `compliance-verification` and `compliance-gap` structures.
+### 15.2 Authenticity
 
----
+**[MUST]** `Signature` (key 10) is a Dilithium3 signature by the `Authority` over that same canonical payload, with `ID` and `Signature` excluded.
 
-## 15. v1 → v2 Migration
+**[MUST]** An implementation MUST verify this signature before accepting a mandate as binding policy, and MUST resolve it against a registered ML-DSA-65 key -- the ValidatorSet or network state. A mandate whose `Authority` does not resolve to a known key MUST be rejected, and an absent or mis-sized signature MUST be rejected before any expensive verification.
 
-**[MUST]** Migration from v1.0 to v2.0 is a **hard fork**.
+Without this check `Authority` is only an assertion: any submitter could install a mandate in another node's name, and the network would treat its rules as authentic policy. A missing signature MUST be treated as an authorisation failure, not as the requirement not applying.
 
-**Procedure:**
-1. Stop all v1.0 nodes at the same final block `B_final`.
-2. Export: validator set, active mandates, SMT root, `H(B_final)`.
-3. Create v2.0 genesis block with:
-   - `InitialValidators` = exported validator set
-   - `GenesisMandate` = mandates converted to v2 format
-   - `LegacyAnchor` = `H(B_final)` (continuity proof)
-4. Start v2.0 network from the new genesis.
+**[MUST]** The validity window (`ValidFrom`, `ValidUntil`) MUST NOT be enforced at admission. An auditor must be able to load an expired mandate to assess a window it covered; refusing it at admission would erase the record the audit is looking for.
+
+### 15.3 Submission-Time Enforcement
+
+**[MUST]** An entry carrying `MandateRef` MUST be checked against the mandate it references: the mandate MUST exist, be in force at the entry's timestamp, and have every field its rules require.
+
+An entry with no `MandateRef` makes no claim and MUST be accepted. Most entries in a provenance chain are governed by no mandate, and rejecting them would make the mechanism unusable.
+
+This half of enforcement is structural: it stops claims of compliance that fail the most basic requirements. It CANNOT detect omitted events, because the protocol never sees an event that was never submitted.
+
+### 15.4 Verification and Enforcement
+
+See `spec/schemas/mandate.cddl` for the `compliance-verification` and `compliance-gap` structures.
+
+**[MUST]** An implementation MUST offer an operation that checks the chain against a mandate over a time window, comparing the anchored entries against the declared obligations.
+
+**[MUST]** Omission MUST be cryptographically detectable: an event a mandate requires that was never anchored MUST produce a gap, distinguishable from an entry that is present but incomplete.
+
+**[MUST]** Verification MUST NOT derive the validator set from the block being verified. The set has to come from an external trust anchor -- the genesis block, an Anchor Publisher, or a full node the operator vouches for. A block that names its own validators can be signed entirely by whoever wrote it.
+
+### 15.5 Degraded Mode
+
+**[MUST]** A mandate applies regardless of the operating mode. The quorum rule of §6.5 governs block finality, not anchoring obligations: a mandate MUST NOT be treated as satisfied with less than its own rules require, even when the chain is degraded.
 
 ---
 
@@ -577,7 +609,22 @@ See `spec/schemas/mandate.cddl` for `compliance-verification` and `compliance-ga
 
 ---
 
-## 17. Normative References
+## 17. v1 → v2 Migration
+
+**[MUST]** Migration from v1.0 to v2.0 is a **hard fork**.
+
+**Procedure:**
+1. Stop all v1.0 nodes at the same final block `B_final`.
+2. Export: validator set, active mandates, SMT root, `H(B_final)`.
+3. Create v2.0 genesis block with:
+   - `InitialValidators` = exported validator set
+   - `GenesisMandate` = mandates converted to v2 format
+   - `LegacyAnchor` = `H(B_final)` (continuity proof)
+4. Start v2.0 network from the new genesis.
+
+---
+
+## 18. Normative References
 
 - FIPS 203: Module-Lattice-Based Key-Encapsulation Mechanism Standard (ML-KEM)
 - FIPS 204: Module-Lattice-Based Digital Signature Standard (ML-DSA)
@@ -586,14 +633,14 @@ See `spec/schemas/mandate.cddl` for `compliance-verification` and `compliance-ga
 - RFC 8439: ChaCha20 and Poly1305 for IETF Protocols
 - RFC 8610: Concise Data Definition Language (CDDL)
 - RFC 8949: Concise Binary Object Representation (CBOR)
-- RFC 9381: Verifiable Random Functions (VRFs) — structural basis of 3CP ECVRF; see §3.3 for declared divergence in `HashToCurve` procedure
+- RFC 9381: Verifiable Random Functions (VRFs) — structural basis of 3CP ECVRF; see §4.3 for declared divergence in `HashToCurve` procedure
 
 ---
 
-## 18. Appendices
+## 19. Appendix A: Complete v2.0 CDDLs
 
 ### A.1 Block (block-v2.cddl)
-See `spec/schemas/block.cddl` (updated per §4).
+See `spec/schemas/block.cddl` (updated per §5).
 
 ### A.2 Network State (network-state.cddl)
 See `spec/schemas/network-state.cddl`.
@@ -609,6 +656,8 @@ See `spec/schemas/light-client.cddl`.
 
 ### A.6 ZK Bridge (zk-bridge.cddl)
 See `spec/schemas/zk-bridge.cddl`.
+
+## 20. Appendix B: Formal Algorithms
 
 ### B.1 Proposer Selection
 
