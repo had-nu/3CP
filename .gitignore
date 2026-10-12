@@ -17,3 +17,6 @@ internal/
 
 # Tooling cache
 .ua/
+
+# Unpublished academic whitepaper
+docs/whitepaper.md
