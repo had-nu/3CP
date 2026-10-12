@@ -1,108 +1,94 @@
 # Verifiable Random Function (ECVRF)
 
 > **Document Level:** C — Protocol
->
 > **Classification:** Normative
->
 > **Status:** Draft
->
-> **Protocol Version:** 1
->
-> **Version:** 1.0
->
-> **Source**
-> - Specification: [`spec/3CP.md`](../../spec/3CP.md) §3.5, §6.3.1
-> - Implementation: `gleipnir-ipc/pkg/identity/vrf.go`
-> - Tests: `pkg/identity/identity_test.go`, `identity_property_test.go`
-> - Schema: [`spec/schemas/vrf.cddl`](../../spec/schemas/vrf.cddl)
+> **Protocol Version:** 3
+> **Source:** [`spec/SPEC-3CP-V3.md`](../SPEC-3CP-V3.md) §3.3, §6.2
+> **Schema:** [`spec/schemas/vrf.cddl`](../schemas/vrf.cddl)
 
 ---
 
 ## Purpose
 
-Define the ECVRF used for proposer selection, including proof structure,
+Define the ECVRF used for leader selection, including proof structure,
 serialization, and verification.
 
-## Scope
-
-The ECVRF primitive (spec §3.5) and its role in proposer selection (spec §6.3.1;
-see [consensus](consensus.md)). This document also records a divergence between
-the reference implementation and RFC 9381.
-
-## Parameters (spec §3.5)
+## Parameters (spec §3.3)
 
 | Parameter | Value |
-|-----------|-------|
-| Curve | Ristretto255 |
-| Suite string | `ristretto255_XMD:SHA-512_R255MAP_RO_` |
-| Private key | 32 bytes (ristretto scalar) |
-| Public key | 32 bytes (ristretto point) |
-| Hash-to-curve | `expand_message_xmd(SHA-512, 64 bytes)` → two 32-byte halves → Elligator2 map → sum p0 + p1 |
+|---|---|
+| Suite | `ECVRF-RISTRETTO255-SHA512` (C2SP `vrf-r255`) |
+| Group | Ristretto255 (prime order, cofactorless) |
+| Internal hash | SHA-512 |
+| Public key | 32 bytes |
+| Private key | 32 bytes |
+| Proof | 96 bytes (`Gamma ‖ C ‖ S`) |
+| Output `Gamma` | 32 bytes |
 
-## VRFProof Structure (96 bytes)
+### Nonce derivation (domain-separated)
+
+```
+k_string = Hash(suite_string || 0x81 || int_to_string(SK, 32) || h_string)
+k        = string_to_int(k_string) mod q
+```
+
+Every `Hash` instantiation in the suite is domain-separated by a fixed prefix,
+as required for a proper deterministic ECVRF.
+
+## VRF proof structure (96 bytes)
 
 | Offset | Size | Field | Description |
 |--------|------|-------|-------------|
-| 0 | 32 | Gamma | VRF output — Ristretto255 point (hash-to-curve result) |
-| 32 | 32 | C | Fiat-Shamir challenge — scalar bytes |
-| 64 | 32 | S | Schnorr response — scalar bytes |
-
-Serialization: `Gamma || C || S` (96 bytes). Implementation:
-`MarshalVRFProof` / `UnmarshalVRFProof` in `pkg/identity/vrf.go`.
+| 0 | 32 | `Gamma` | VRF output — Ristretto255 point |
+| 32 | 32 | `C` | Fiat-Shamir challenge scalar |
+| 64 | 32 | `S` | Schnorr response scalar |
 
 ## Operations
 
-| Operation | Signature | Description |
-|-----------|-----------|-------------|
-| `GenerateVRFKeyPair` | → (sk, pk) | 32-byte scalar / point |
-| `Prove(sk, alpha)` | → proof | Schnorr-style over `HashToCurve(alpha)` |
-| `Verify(pk, alpha, proof)` | → bool | MUST verify every received proof (spec §3.5) |
+| Operation | Description |
+|-----------|-------------|
+| `VRF_KeyGen()` | → `(sk, pk)`, 32-byte scalar / point |
+| `VRF_Prove(sk, alpha)` | → 96-byte proof |
+| `VRF_Verify(pk, alpha, proof)` | → `gamma` or `INVALID` |
 
-## Role in Consensus
+## Role in consensus
 
-`alpha = LE64(cycle) || stateRoot` (40 bytes). The peer with the lowest `Gamma`
-in lexicographic byte order is the proposer for that cycle (spec §6.3.1). Any
-proof failing verification excludes its producer from selection that cycle. See
-[consensus](consensus.md) §1.
+`alpha = "3CP-VRF-ALPHA-v3" || LE64(cycle) || StateRoot_at_cycle_start`.
+
+The validator with the lexicographically smallest `Gamma` is the proposer for
+that cycle; ties break by smallest `ValidatorID`. A proof that fails
+verification excludes its producer from selection for that cycle.
 
 ## Security
 
 | Property | Basis |
 |----------|-------|
-| Grinding resistance | ECVRF output is pseudorandom and bound to the key; a proposer cannot bias `Gamma` without changing keys |
 | Verifiability | Any peer verifies a proof against the sender's 32-byte VRF public key |
-| Uniqueness | RFC 9381 VRFs bind a unique output to each (key, input) pair |
+| Determinism / uniqueness | RFC 9381 construction: a unique output per (key, input) |
+| Grinding resistance | Output is pseudorandom and bound to the key; a validator cannot bias its `Gamma` for a fixed `alpha` without its key |
 
-## Implementation Divergence (RFC 9381)
+> **Correction from v2.0.** v2.0 documented a "2-point Elligator2 sum"
+> hash-to-curve and an "HMAC-SHA512(sk) nonce" that match no published standard,
+> and inconsistently named the suite `ECVRF-EDWARDS25519-SHA512-Elligator2`
+> (an edwards25519 suite) while targeting Ristretto255. RFC 9380 §8.5 explicitly
+> forbids the edwards25519 suites for hashing to ristretto255. v3.0 adopts the
+> published `ECVRF-RISTRETTO255-SHA512` suite and its domain-separated nonce;
+> the divergence is eliminated, not merely documented. Byte-exact vectors ship
+> in [`spec/examples/vectors/`](../examples/vectors/).
 
-> **Behavior not fully conformant to RFC 9381.**
->
-> `pkg/identity/vrf.go` `HashToCurve` uses a custom two-point Elligator2 sum
-> (expand to 64 bytes via XMD-SHA-512, split into two 32-byte halves, Elligator2
-> map each, and sum) rather than the literal RFC 9381 `hash_to_ristretto255`
-> procedure. Nonce derivation uses HMAC-SHA-512 and challenge/response are
-> Schnorr-style.
->
-> Consequences:
-> - The construction is internally consistent (prove/verify round-trip within
->   Gleipnir) and grinding-resistant for proposer selection.
-> - Byte-level interoperability with a strictly RFC-9381-conformant ECVRF is
->   **not guaranteed**. A second implementation MUST replicate Gleipnir's
->   hash-to-curve to interoperate, or both MUST migrate to the literal RFC 9381
->   procedure.
-> - This is a known gap to resolve before claiming RFC 9381 conformance.
-
-## Failure Modes
+## Failure modes
 
 | Failure | Error | Handling |
 |---------|-------|----------|
 | Malformed proof bytes | `ErrVRFInvalidInput` | Reject; exclude peer |
 | Verification failure | `ErrVRFVerifyFailed` | Exclude peer from selection this cycle |
-| No valid proposer | `ErrVRFSelectionFailed` | New VRF round |
+| No valid proposer | `ErrVRFSelectionFailed` | New VRF round next cycle |
 
 ## References
 
-- [`spec/3CP.md`](../../spec/3CP.md) §3.5, §6.3.1
-- [`spec/schemas/vrf.cddl`](../../spec/schemas/vrf.cddl)
-- [RFC 9381](https://tools.ietf.org/html/rfc9381) — Verifiable Random Functions
-- [consensus](consensus.md), [cryptography](cryptography.md)
+- [`spec/SPEC-3CP-V3.md`](../SPEC-3CP-V3.md) §3.3, §6.2
+- [`spec/schemas/vrf.cddl`](../schemas/vrf.cddl)
+- [RFC 9381](https://www.rfc-editor.org/rfc/rfc9381.html) — Verifiable Random Functions
+- [RFC 9380](https://www.rfc-editor.org/rfc/rfc9380.html) — Hashing to Elliptic Curves
+- [cryptography](prose-cryptography.md), [consensus](prose-consensus.md)

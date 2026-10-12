@@ -8,7 +8,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/status-draft-yellow" alt="Status: Draft">
-  <img src="https://img.shields.io/badge/protocol--version-v2-blue" alt="Protocol Version: v2">
+  <img src="https://img.shields.io/badge/protocol--version-v3-blue" alt="Protocol Version: v3">
   <img src="https://img.shields.io/badge/conformance-extended%20suite-brightgreen" alt="Conformance: Extended">
   <img src="https://img.shields.io/badge/pre--publication-private-red" alt="Pre-publication: Private">
 </p>
@@ -52,17 +52,17 @@ contestable evidence of decision provenance.
 |---|---|
 | **Contestability** | Evidence can be challenged, but the challenge occurs over the intact chain, not over a chain reconstructed after the incident |
 | **Third-party verifiability** | Any party with the public chain can independently verify SMT proofs, signatures, and block hashes without contacting the producing network |
-| **Non-repudiation** | Each entry is cryptographically bound to the submitting identity via Dilithium3 signatures; once quorum-validated, no party can deny the submission |
+| **Non-repudiation** | Each entry is cryptographically bound to the submitting identity via ML-DSA-65 signatures; once quorum-validated, no party can deny the submission |
 | **Epistemic preservation** | The system records who knew what, when, who approved, who signed, who altered — the epistemology of the incident, not just hashes |
-| **Post-quantum security** | Dilithium3 signatures, Kyber1024 KEM, ECVRF (Ristretto255) — NIST-standardized post-quantum cryptography throughout |
+| **Post-quantum security** | ML-DSA-65 signatures, ML-KEM-1024 KEM, ECVRF-RISTRETTO255 — NIST-standardized post-quantum cryptography throughout |
 | **Mandatory anchoring** | Protocol-native Mandate declarations (§13) make anchoring obligations independently verifiable; compliance gaps (missing entries, missing fields) are cryptographically detectable by any third party |
 
 ## Protocol Stack
 
 | Layer | Specification |
 |---|---|
-| Wire format | Canonical CBOR (integer-keyed, deterministic) — see [`spec/SPEC-3CP-V2.md`](spec/SPEC-3CP-V2.md) §5 |
-| Consensus | Two-phase BFT (PREPARE/COMMIT) with ECVRF leader election + `ceil(2N/3)` Dilithium3 quorum — §6 |
+| Wire format | Canonical CBOR (integer-keyed, deterministic, RFC 8949 §4.2.1) — see [`spec/SPEC-3CP-V3.md`](spec/SPEC-3CP-V3.md) §4 |
+| Consensus | Two-phase BFT (PREPARE/COMMIT) with ECVRF leader election + `ceil(2N/3)` ML-DSA-65 quorum — §6 |
 | State | Sparse Merkle Tree (BLAKE3, depth 256) — §9 |
 | Transport (canonical) | gRPC over Protocol Buffers — §7 |
 | Sub-chains | Per-service SMT + cross-chain anchors — §9 |
@@ -75,12 +75,31 @@ contestable evidence of decision provenance.
 
 The `spec/` directory contains the normative protocol definition:
 
-- `SPEC-3CP-V2.md` — Current normative specification (v2.0)
-- `3CP.md` — Historical v1.0 specification (preserved for reference)
+- **`SPEC-3CP-V3.md`** — Current normative specification (v3.0) — *start here*
+- `3CP.md` — Historical v1.0 specification (preserved for reference only; **do not implement**)
 - `glossary.md` — Unified terminology
 - `schemas/` — CDDL schemas for all protocol data structures
 - `notes/` — Explanatory documents on protocol design decisions
 - `examples/` — Test vectors and conformance fixtures
+  - `examples/vectors/` — Machine-readable cryptographic test vectors
+
+## Cryptographic Suite (v3.0)
+
+| Primitive | Standard | Size |
+|---|---|---|
+| Signatures | **ML-DSA-65** (FIPS 204) | pk 1,952 B / sig **3,309 B** |
+| KEM | **ML-KEM-1024** (FIPS 203) | ct 1,568 B / ss 32 B |
+| VRF | **ECVRF-RISTRETTO255-SHA512** (C2SP `vrf-r255`) | proof 96 B |
+| Hashing | BLAKE3-256, SHA-256 | 32 B |
+| KDF | HKDF-SHA256 (RFC 5869) | explicit `L` |
+| AEAD | ChaCha20-Poly1305 (RFC 8439) | 32 B key / 12 B nonce |
+
+> **Note.** Earlier 3CP drafts specified a **2,700-byte** "Dilithium3" signature
+> while citing FIPS 204. 2,700 bytes is the *round-3 draft* value; FIPS 204
+> Table 2 fixes ML-DSA-65 at **3,309 bytes** (corrected upstream in PR #1).
+> v3.0 additionally adopts the canonical CBOR float rule, the published
+> `vrf-r255` suite, and domain-separated preimages. See
+> [`spec/SPEC-3CP-V3.md`](spec/SPEC-3CP-V3.md) Appendix D.
 
 ## Implementations
 
@@ -100,7 +119,7 @@ These repositories are **not part of this specification repository**.
 
 ## Conformance
 
-Implementations claiming 3CP v2.0 conformance must pass the extended test suite
+Implementations claiming 3CP v3.0 conformance must pass the extended test suite
 defined in `spec/examples/` and `spec/notes/`, including:
 
 - 12+ adversarial BFT test cases (TC-BFT-01 through TC-MEM-01 per §15)
@@ -117,7 +136,7 @@ defined in `spec/examples/` and `spec/notes/`, including:
 ├── PLAYBOOK.md          ← intern onboarding playbook
 ├── LICENSE              ← All Rights Reserved (pre-publication)
 ├── spec/
-│   ├── SPEC-3CP-V2.md   ← normative protocol specification v2.0 (RFC 2119)
+│   ├── SPEC-3CP-V3.md   ← normative protocol specification v3.0 (RFC 2119/8174)
 │   ├── 3CP.md           ← historical v1.0 specification
 │   ├── glossary.md      ← terminology
 │   ├── schemas/         ← CDDL wire format definitions
@@ -131,7 +150,7 @@ defined in `spec/examples/` and `spec/notes/`, including:
   conformance suite against the reference implementation.
 - **Pre-publication** — this repository is private. The specification will be
   opened alongside the accompanying academic paper.
-- **Protocol version**: v2.0 — wire-format stable. Future versions will be
+- **Protocol version**: v3.0 — wire-format stable. Future versions will be
   backward-compatible or explicitly versioned.
 
 ## Citation (pre-publication)
@@ -141,6 +160,7 @@ defined in `spec/examples/` and `spec/notes/`, including:
   title        = {{3CP}: Cryptographic Chain-of-Custody Protocol},
   author       = {André Ataíde},
   year         = {2026},
+  version      = {3.0},
   note         = {Pre-publication draft}
 }
 ```
@@ -148,6 +168,6 @@ defined in `spec/examples/` and `spec/notes/`, including:
 ---
 
 <p align="center">
-  <strong>3CP</strong> — Cryptographic Chain-of-Custody Protocol v2.0<br>
+  <strong>3CP</strong> — Cryptographic Chain-of-Custody Protocol v3.0<br>
   All Rights Reserved © 2026
 </p>

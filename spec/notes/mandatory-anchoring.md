@@ -3,7 +3,7 @@
 ## Context
 
 3CP v1 established the cryptographic substrate for chain-of-custody evidence:
-Dilithium3 signatures, SMT proofs, VRF consensus, sub-chains, third-party
+ML-DSA-65 signatures, SMT proofs, VRF consensus, sub-chains, third-party
 verifiability. The protocol defined *how* to anchor but not *what must* be
 anchored. An operator could silently omit events without protocol-level
 consequence. The forensic indistinction problem — the inability to distinguish
@@ -29,7 +29,7 @@ anchoring requirements. Key design properties:
 
 1. **Mandates are entries.** A Mandate is submitted as a `ProvenanceEntry`
    (hash of its canonical CBOR) and inherits all 3CP guarantees: non-repudiation
-   via Dilithium3, integrity via SMT, third-party verifiability.
+   via ML-DSA-65, integrity via SMT, third-party verifiability.
 
 2. **Mandates form a genealogical chain.** Each version links to the previous
    via `PrevVersion`. The full policy history is auditable from the chain.

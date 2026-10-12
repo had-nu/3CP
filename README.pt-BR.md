@@ -64,7 +64,7 @@ contestáveis de proveniência de decisões.
 
 | Camada | Especificação |
 |---|---|
-| Formato de transmissão | CBOR canônico (chaveado por inteiro, determinístico) — veja [`spec/SPEC-3CP-V2.md`](spec/SPEC-3CP-V2.md) §5 |
+| Formato de transmissão | CBOR canônico (chaveado por inteiro, determinístico, RFC 8949 §4.2.1) — veja [`spec/SPEC-3CP-V3.md`](spec/SPEC-3CP-V3.md) §4 |
 | Consenso | BFT em duas fases (PREPARE/COMMIT) com eleição de líder ECVRF + quórum `ceil(2N/3)` Dilithium3 — §6 |
 | Estado | Árvore Merkle Esparsa (BLAKE3, profundidade 256) — §9 |
 | Transporte (canônico) | gRPC sobre Protocol Buffers — §7 |
@@ -78,8 +78,8 @@ contestáveis de proveniência de decisões.
 
 O diretório `spec/` contém a definição normativa do protocolo:
 
-- `SPEC-3CP-V2.md` — Especificação normativa atual (v2.0)
-- `3CP.md` — Especificação histórica v1.0 (preservada para referência)
+- **`SPEC-3CP-V3.md`** — Especificação normativa atual (v3.0) — *comece aqui*
+- `3CP.md` — Especificação histórica v1.0 (preservada apenas para referência; **não implemente**)
 - `glossary.md` — Terminologia unificada
 - `schemas/` — Schemas CDDL para todas as estruturas de dados do protocolo
 - `notes/` — Documentos explicativos sobre decisões de design do protocolo
@@ -103,7 +103,7 @@ Estes repositórios **não fazem parte deste repositório de especificação**.
 
 ## Conformidade
 
-Implementações alegando conformidade com 3CP v2.0 devem passar pela suíte de
+Implementações alegando conformidade com 3CP v3.0 devem passar pela suíte de
 testes estendida definida em `spec/examples/` e `spec/notes/`, incluindo:
 
 - 12+ casos de teste BFT adversariais (TC-BFT-01 até TC-MEM-01 por §15)
@@ -120,7 +120,7 @@ testes estendida definida em `spec/examples/` e `spec/notes/`, incluindo:
 ├── PLAYBOOK.md          ← guia prático para integrar com Gleipnir
 ├── LICENSE              ← Todos os Direitos Reservados (pré-publicação)
 ├── spec/
-│   ├── SPEC-3CP-V2.md   ← especificação normativa do protocolo v2.0 (RFC 2119)
+│   ├── SPEC-3CP-V3.md   ← especificação normativa do protocolo v3.0 (RFC 2119/8174)
 │   ├── 3CP.md           ← especificação histórica v1.0
 │   ├── glossary.md      ← terminologia
 │   ├── schemas/         ← definições de formato CDDL
@@ -134,7 +134,7 @@ testes estendida definida em `spec/examples/` e `spec/notes/`, incluindo:
   conformidade estendida contra a implementação de referência.
 - **Pré-publicação** — este repositório é privado. A especificação será
   aberta junto com o artigo acadêmico correspondente.
-- **Versão do protocolo**: v2.0 — formato de transmissão estável. Versões
+- **Versão do protocolo**: v3.0 — formato de transmissão estável. Versões
   futuras serão compatíveis com versões anteriores ou explicitamente
   versionadas.
 
@@ -152,6 +152,6 @@ testes estendida definida em `spec/examples/` e `spec/notes/`, incluindo:
 ---
 
 <p align="center">
-  <strong>3CP</strong> — Protocolo Criptográfico de Cadeia de Custódia v2.0<br>
+  <strong>3CP</strong> — Protocolo Criptográfico de Cadeia de Custódia v3.0<br>
   Todos os Direitos Reservados © 2026
 </p>

@@ -1,5 +1,8 @@
-;; 3CP Mandate Structure (CBOR)
+;; 3CP Mandate Structure (CBOR) — protocol v3.0
 ;; CDDL — RFC 8610
+;; Signature 3309 B = ML-DSA-65 (FIPS 204).
+;; MandateID = BLAKE3-256("3CP-MANDATE-v3" || canonical CBOR of keys 0-9).
+;; Floats: shortest round-trip (RFC 8949 4.2.1); NaN/Inf forbidden.
 ;; Integer keys in canonical (ascending) order.
 
 mandate-entry = {
@@ -13,7 +16,7 @@ mandate-entry = {
   7 => [* rule],                   ; Rules
   8 => bytes .size 32,             ; PolicyHash (BLAKE3-256 of the anchoring policy document)
   9 => bytes,                      ; PolicyURI (URI string to the full policy text; OPTIONAL)
-  10 => bytes .size 3309,          ; Signature (Dilithium3 from Authority over canonical CBOR excluding this field)
+  10 => bytes .size 3309,          ; Signature (ML-DSA-65 by Authority over keys 0-9)
 }
 
 rule = {

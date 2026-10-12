@@ -6,7 +6,7 @@
 >
 > **Status:** Draft
 >
-> **Protocol Version:** 1
+> **Protocol Version:** 3
 >
 > **Version:** 1.0
 >
@@ -54,10 +54,10 @@ cryptography throughout, and is transport-agnostic (gRPC is canonical).
 | Layer | Definition | Document |
 |-------|------------|----------|
 | Wire format | Canonical CBOR (integer-keyed, deterministic) | [protobuf](protobuf.md), spec §3.6, §4 |
-| Cryptographic primitives | BLAKE3-256, SHA-256, Dilithium3, Kyber1024, ECVRF | [cryptography](cryptography.md) |
+| Cryptographic primitives | BLAKE3-256, SHA-256, ML-DSA-65, ML-KEM-1024, ECVRF | [cryptography](cryptography.md) |
 | State commitment | Sparse Merkle Tree (BLAKE3, depth 256) | [sparse-merkle-tree](sparse-merkle-tree.md) |
 | Leader election | ECVRF (RFC 9381, Ristretto255) | [vrf](vrf.md) |
-| Consensus | VRF selection + M-of-N Dilithium3 quorum | [consensus](consensus.md) |
+| Consensus | VRF selection + M-of-N ML-DSA-65 quorum | [consensus](consensus.md) |
 | Transport (canonical) | gRPC over Protocol Buffers | [networking](networking.md) |
 | Identity | UID0 soulbound tokens | spec §8 |
 | Sub-chains | Per-service SMT + cross-chain anchors | [anchoring](anchoring.md), spec §9 |

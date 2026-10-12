@@ -1,84 +1,60 @@
-;; 3CP Block Structure (CBOR)
+;; 3CP Block Structure (CBOR) — protocol v3.0
 ;; CDDL — RFC 8610
 ;; Integer keys in canonical (ascending) order.
-
-block = {
-  0 => uint64,                     ; Index
-  1 => bytes .size 32,             ; PrevHash (BLAKE3-256)
-  2 => bytes .size 32,             ; StateRoot (SMT root)
-  3 => bytes .size 16,             ; Proposer (RootID)
-  ? 4 => [3 * bytes],              ; Triad (reserved; omitted in v2, see genesis.cddl)
-  5 => [* provenance-entry],       ; Anchored entries
-  6 => float64,                    ; Lambda1 (Laplacian eigenvalue)
-  7 => int64,                      ; Timestamp (UnixNano)
-  ? 8 => null,                     ; RESERVED in ProtocolVersion == 2 (was Sigs in v1.0)
-  9 => [* validator-info],         ; Validators (canonical validator set, see §7.1)
-  10 => quorum-config,             ; Quorum
-  11 => bytes .size 32,            ; BlockHash (SHA-256)
-
-  ;; v2.0 fields
-  12 => uint16,                     ; ProtocolVersion (default: 2)
-  13 => bytes,                      ; PrepareSigsBitmap (bitfield, N bits)
-  14 => [* bytes .size 3309],       ; PrepareSigsPayload (only active signers)
-  15 => bytes .size 3309,           ; CommitSig (leader's commit signature)
-  16 => [* tstr],                   ; ExternalAnchors (URIs/CIDs of publication)
-  17 => uint64,                     ; KeyRotationEpoch (reference cycle for active keys)
-  18 => bytes .size 32,             ; LegacyAnchor (H(B_final v1.0); genesis only, §16)
-  19 => {* tstr => bytes},          ; Metadata (e.g. "3cp:degraded-block", §5.5)
-}
+;; Signature 3309 B = ML-DSA-65 (FIPS 204 Table 2); public key 1952 B.
+;; Canonical encoding: RFC 8949 §4.2.1 (shortest round-trip floats; no NaN/Inf).
+;; Block layout follows upstream PR #2 (72a5e4b/#2) — preserved here.
 
 validator-info = {
   0 => bytes .size 16,             ; ValidatorID (RootID)
-  1 => bytes .size 1952,           ; Dilithium3PK
-  2 => bytes .size 32,             ; VRFPK
-  3 => bytes .size 32,             ; ContractHash (optional)
+  1 => bytes .size 1952,           ; ML-DSA-65 public key
+  2 => bytes .size 32,             ; VRF public key (Ristretto255 point)
+  3 => bytes .size 32,             ; ContractHash (zeros if absent)
 }
+
+block = {
+  0  => uint64,                    ; Index
+  1  => bytes .size 32,            ; PrevHash (BLAKE3-256 of previous BlockHash)
+  2  => bytes .size 32,            ; StateRoot (BLAKE3-256 SMT root)
+  3  => bytes .size 16,            ; Proposer (RootID)
+  ? 4 => [3 * bytes],              ; Triad (reserved; omitted in v3.0)
+  5  => [* provenance-entry],      ; Anchored entries
+  6  => float,                     ; Lambda1 (shortest round-trip)
+  7  => int64,                     ; Timestamp (UnixNano)
+  ? 8 => null,                     ; RESERVED in ProtocolVersion == 3 (was Sigs in v1.0)
+  9  => [* validator-info],        ; Validators (canonical validator set, see §7.1)
+  10 => quorum-config,             ; Quorum
+  11 => bytes .size 32,            ; BlockHash (SHA-256, domain-separated — §5.5)
+  12 => uint16,                    ; ProtocolVersion (== 3 in v3.0)
+  13 => bytes,                     ; PrepareSigsBitmap (MSB-first bits; high bits zero)
+  14 => [* bytes .size 3309],      ; PrepareSigsPayload (active signers, index order)
+  15 => bytes .size 3309,          ; CommitSig (leader signature over B_final)
+  16 => [* tstr],                  ; ExternalAnchors (publication URIs/CIDs)
+  17 => uint64,                    ; KeyRotationEpoch (reference cycle for active keys)
+  18 => bytes .size 32,            ; LegacyAnchor (genesis only; zeros otherwise)
+  19 => {* tstr => bytes},         ; Metadata (e.g. "3cp:degraded-block", §6.5)
+}
+; Keys > 19 MUST be ignored on decode (forward compatibility, §5.3).
 
 provenance-entry = {
-  0 => bytes .size 32,             ; Hash (anchored artifact hash)
-  1 => bytes,                      ; Submitter (RootID or caller)
-  2 => int64,                      ; Timestamp (UnixNano)
-  3 => tstr,                       ; Label
+  0  => bytes .size 32,            ; Hash (anchored artifact hash)
+  1  => bytes,                     ; Submitter (RootID or caller)
+  2  => int64,                     ; Timestamp (UnixNano)
+  3  => tstr,                      ; Label
   ? 4 => bytes,                    ; Approver (RootID)
   ? 5 => bytes .size 32,           ; Reference (related entry hash)
-  ? 6 => bytes .size 3309,         ; Signature (Dilithium3)
-  ? 7 => bytes .size 32,           ; MandateRef (hash of MandateEntry, §4.4)
-}
-
-mandate-entry = {
-  0 => bytes .size 32,             ; MandateID (BLAKE3-256 of canonical CBOR excluding signature)
-  1 => bytes .size 16,             ; Authority (RootID)
-  2 => uint64,                     ; Version
-  3 => bytes .size 32,             ; PrevVersion (zeros for first version)
-  4 => int64,                      ; ValidFrom (UnixNano)
-  5 => int64,                      ; ValidUntil (UnixNano; 0 = never expires)
-  6 => bytes .size 32,             ; Supersedes (zeros if no prior mandate)
-  7 => [* rule],                   ; Rules
-  8 => bytes .size 32,             ; PolicyHash
-  ? 9 => tstr,                     ; PolicyURI
-  10 => bytes .size 3309,          ; Signature (Dilithium3 from Authority)
-}
-
-rule = {
-  0 => tstr,                       ; EventClass
-  1 => tstr,                       ; Description
-  2 => float64,                    ; SeverityMin (0.0 = any)
-  3 => float64,                    ; SeverityMax (10.0 = any)
-  4 => uint,                       ; AssetCriticalityMin (1-5)
-  5 => [* tstr],                   ; RegulatoryScope
-  6 => bool,                       ; Mandatory
-  7 => [* tstr],                   ; RequiredFields
-  8 => uint64,                     ; MaxDeferralSec
+  ? 6 => bytes .size 3309,         ; Signature (ML-DSA-65 over "3CP-ENTRY-v3" payload)
+  ? 7 => bytes .size 32,           ; MandateRef (hash of MandateEntry, §13)
 }
 
 quorum-config = {
-  0 => int,                        ; TotalValidators
-  1 => int,                        ; RequiredSigs
+  0 => uint,                       ; TotalValidators
+  1 => uint,                       ; RequiredSigs
 }
 
 uid0-identity = {
-  0 => bytes .size 16,             ; RootID
-  1 => bytes .size 16,             ; FEntropy
+  0  => bytes .size 16,            ; RootID
+  1  => bytes .size 32,            ; EntropySource (32 bytes from OS CSPRNG, §11.2)
   ? 2 => bytes,                    ; GenesisHash
   ? 3 => [* bytes],                ; FounderMerkleProofs
   ? 4 => bytes,                    ; SigRecovery
@@ -92,9 +68,9 @@ uid0-identity = {
   ? 12 => [* bytes],               ; MerkleProof
   ? 13 => bool,                    ; Simulated
   14 => bytes .size 32,            ; FinalDigest
-  15 => bytes .size 1952,          ; PublicKey (Dilithium3)
-  16 => bytes,                     ; SecretKey (MUST NOT be transmitted)
+  15 => bytes .size 1952,          ; ML-DSA-65 public key
+  16 => bytes,                     ; SecretKey (MUST NOT be exported or transmitted)
   ? 17 => bytes,                   ; ContractHash
-  18 => bytes .size 32,            ; VRFPublicKey
-  19 => bytes .size 32,            ; VRFSecretKey (MUST NOT be transmitted)
+  18 => bytes .size 32,            ; VRFPublicKey (Ristretto255)
+  19 => bytes .size 32,            ; VRFSecretKey (MUST NOT be exported or transmitted)
 }

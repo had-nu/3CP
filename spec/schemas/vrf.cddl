@@ -1,8 +1,15 @@
-;; 3CP ECVRF VRFProof
-;; RFC 9381 — Ristretto255 ECVRF
-;; Serialized as 96 contiguous bytes
+;; 3CP ECVRF proof — ECVRF-RISTRETTO255-SHA512 (C2SP vrf-r255)
+;; Ristretto255 (prime order), SHA-512 internal hash.
+;; Serialized as 96 contiguous bytes: Gamma (32) || C (32) || S (32).
+;;
+;; Suite nonce (domain separated):
+;;   k_string = Hash(suite_string || 0x81 || int_to_string(SK,32) || h_string)
+;;   k        = string_to_int(k_string) mod q
+;;
+;; RFC 9380 §8.5: edwards25519 suites MUST NOT be used to hash to ristretto255.
+;; Proof length 96 bytes. See spec §3.3.
 
 vrf-proof = bytes .size 96
-; Offset 0-31:  Gamma (Ristretto255 point, 32 bytes)
-; Offset 32-63: C (Fiat-Shamir challenge scalar, 32 bytes)
-; Offset 64-95: S (Schnorr response scalar, 32 bytes)
+; Offset  0-31: Gamma  (Ristretto255 point — VRF output)
+; Offset 32-63: C      (Fiat-Shamir challenge scalar)
+; Offset 64-95: S      (Schnorr response scalar)

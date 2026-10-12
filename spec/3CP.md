@@ -1,6 +1,22 @@
-> **NOTE:** This document specifies 3CP Protocol v1.0, preserved for historical
-> reference. The current normative specification is **3CP Protocol v2.0**
-> (`spec/SPEC-3CP-V2.md`). New implementations should conform to v2.0.
+> **NOTE — HISTORICAL DOCUMENT, NOT FOR IMPLEMENTATION.**
+>
+> This document specifies 3CP Protocol **v1.0**, preserved for historical
+> reference only. The current normative specification is **3CP Protocol v3.0**
+> ([`spec/SPEC-3CP-V3.md`](SPEC-3CP-V3.md)).
+>
+> **Do not implement v1.0.** It contains cryptographic errors that v3.0 corrects:
+>
+> | Issue | v1.0 (wrong) | v3.0 (canonical) |
+> |---|---|---|
+> | Signature size | 2,700 B (round-3 draft Dilithium3) | **3,309 B** (FIPS 204 Table 2) |
+> | Canonical CBOR floats | fixed 64-bit IEEE 754 | **shortest round-trip** (RFC 8949 §4.2.1) |
+> | SMT preimages | `BLAKE3("leaf" ‖ k ‖ v)`, no separation | **explicit `3CP-SMT-*` domain tags** |
+> | BlockHash | no domain tag, no `NetworkID` binding | **`3CP-BLOCKHASH-v3` tag + `NetworkID`** |
+>
+> The v1.0 `BlockHash` construction in §3.2 is incompatible with v3.0 §5.5, so
+> v1.0 and v3.0 blocks cannot be mixed. Migration is a hard fork (v3.0 §15).
+>
+> New implementations **MUST** target v3.0.
 
 ---
 title: 3CP — Cryptographic Chain-of-Custody Protocol

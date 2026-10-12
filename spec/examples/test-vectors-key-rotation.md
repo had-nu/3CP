@@ -10,7 +10,7 @@
 ### Validator Identity
 
 - ValidatorID: `a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6`
-- Current Dilithium3PK: `[1952 bytes, hex: 01a2b3...]`
+- Current ML-DSA-65PK: `[1952 bytes, hex: 01a2b3...]`
 - Current VRFPK: `[32 bytes, hex: 4d5e6f...]`
 
 ### Key Rotation Entry (canonical CBOR)
@@ -32,7 +32,7 @@
 
 ### Verification Steps
 
-1. `SignatureOld` verifies against Current Dilithium3PK.
+1. `SignatureOld` verifies against Current ML-DSA-65PK.
 2. `SignatureNew` verifies against `NewPublicKey`.
 3. `EffectiveCycle (100) >= currentCycle + 10`.
 4. `ExpiryCycle (110) >= EffectiveCycle + 10`.

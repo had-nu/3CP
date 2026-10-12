@@ -1,32 +1,54 @@
-# Light Client Verification in 3CP v2.0
+# Light Client Verification in 3CP v3.0
+
+> **Protocol Version:** 3
+> **Source:** [`spec/SPEC-3CP-V3.md`](../SPEC-3CP-V3.md) §12.2
 
 ## Principle
 
-A light client does not execute consensus, maintain full state, or trust any
-single node. It verifies blocks using only:
+A light client executes no consensus, keeps no full state, and trusts no single
+node. It relies only on:
 
-1. The `ValidatorSet` for the cycle in question.
-2. The block's `PrepareSigsPayload`, `CommitSig`, and `BlockHash`.
-3. SMT proofs for individual entries.
+1. A **trusted genesis `BlockHash`** (the trust anchor).
+2. The canonical `ValidatorSet` for the cycle.
+3. `PrepareSigsBitmap`, `PrepareSigsPayload`, `CommitSig`, and `BlockHash`.
+4. SMT proofs for individual entries.
 
-## Verification Steps
+## Verification steps
 
-Given a block `B` and a trusted `ValidatorSet_V` (obtained from an Anchor
-Publisher or synced from a full node):
+1. Check `B.ProtocolVersion` is supported (== 3 for a v3.0 client).
+2. Verify `popcount(B.PrepareSigsBitmap) >= ceil(2*N/3)` and bits `>= N` are zero.
+3. Verify `len(B.PrepareSigsPayload) == popcount(bitmap)`.
+4. Verify each PREPARE signature (exactly **3,309 bytes**, ML-DSA-65, empty
+   context) against the validator at its bit position, over `H(B)`.
+5. Verify `CommitSig` (3,309 bytes) against the proposer, over `B_final`
+   excluding key 15.
+6. Recompute `B.BlockHash` per §5.5 — preimage begins with `3CP-BLOCKHASH-v3`.
+7. Reject if key 8 is present and non-null (`ErrReservedFieldPresent`).
+8. Verify the `PrevHash` chain back to the trusted genesis.
 
-1. Verify `len(B.PrepareSigsPayload) >= ceil(2*N/3)` where `N = len(ValidatorSet_V)`.
-2. Verify each PREPARE signature against the corresponding validator's
-   `Dilithium3PK` in `ValidatorSet_V`.
-3. Verify `B.CommitSig` against the proposer's `Dilithium3PK`.
-4. Verify `B.BlockHash` using the algorithm in §5.4 of SPEC-3CP-V2.md.
-5. Verify the `PrevHash` chain back to a known anchor.
+> **Correction from v2.0.** v2.0 did not check `ProtocolVersion` before
+> interpreting fields, did not enforce the reserved-key-8 rule, and referenced a
+> v2.0 `BlockHash` without a domain tag. v3.0 makes each explicit.
 
-## SMT Proof Verification
+## Signature size enforcement
 
-For an individual entry `e` claimed to be in block `B`:
+Per FIPS 204 §10.2 a verifier MUST reject any signature whose length differs
+from the parameter-set length: exactly **3,309 bytes** for ML-DSA-65; public keys
+exactly **1,952 bytes**.
 
-1. Obtain `SMTProof` for `e.Hash` at block `B.Index`.
-2. Run `VerifySMTProof(B.StateRoot, e.Hash, e.Hash, SMTProof)`.
-3. If true, `e` is provably anchored in `B`.
+## External trust anchor
 
-No consensus execution, no full chain sync, no trust in the operator.
+Verification MUST NOT derive the validator set from the block being verified —
+a block that names its own validators can be signed entirely by whoever wrote
+it. The set must come from genesis, an Anchor Publisher, or a vouched full node.
+
+## SMT proof verification
+
+For an entry `e` in block `B`: obtain the 8,192-byte `SMTProof` for `e.Hash` and
+run `VerifySMTProof(B.StateRoot, e.Hash, e.Hash, SMTProof)` using the
+`3CP-SMT-LEAF-v3` / `3CP-SMT-NODE-v3` tagged preimages (spec §9.3).
+
+## References
+
+- [`spec/SPEC-3CP-V3.md`](../SPEC-3CP-V3.md) §12.2, §5.4–5.6, §9.3
+- [`spec/examples/test-vectors-light-client.md`](../examples/test-vectors-light-client.md)

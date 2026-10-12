@@ -1,27 +1,21 @@
-;; 3CP Network State v2.0
+;; 3CP Network State v3.0
 ;; CDDL — RFC 8610
-;; Canonical CBOR with integer keys in ascending order.
+;; Canonical CBOR, integer keys ascending (RFC 8949 §4.2.1).
+;; Public key 1952 B = ML-DSA-65 (FIPS 204).
 
 network-state = {
-    0 => [* node-state],           ; Nodes in the network topology
-    1 => float64,                   ; Lambda1 (Fiedler eigenvalue)
-    2 => uint64,                    ; Current cycle index
-    3 => [* mandate-entry],         ; Active mandates (anchored in chain)
-    4 => bytes .size 32,            ; SupervisionRoot (hash of validator state)
-    5 => [* validator-info],        ; ValidatorSet (canonical ordering)
+    0 => [* node-state],         ; Nodes in the network topology
+    1 => float,                  ; Lambda1 (Fiedler eigenvalue)
+    2 => uint64,                 ; Current cycle index
+    3 => [* mandate-entry],      ; Active mandates (anchored in chain)
+    4 => bytes .size 32,         ; SupervisionRoot
+    5 => [* validator-info],     ; ValidatorSet (canonical ordering)
 }
 
 node-state = {
-    0 => bytes .size 16,    ; UID (RootID)
-    1 => float64,            ; Status (connectivity weight, 0.0-1.0)
-    2 => uint64,            ; Consecutive cycles active
-    3 => bytes .size 1952,  ; Dilithium3PK (public signing key)
-    4 => bytes .size 32,    ; VRFPK (public VRF key)
-}
-
-validator-info = {
-    0 => bytes .size 16,    ; ValidatorID (RootID)
-    1 => bytes .size 1952,  ; Dilithium3PK
-    2 => bytes .size 32,    ; VRFPK
-    3 => bytes .size 32,    ; ContractHash (optional, default zeros)
+    0 => bytes .size 16,         ; UID (RootID)
+    1 => float,                  ; Status (connectivity weight, 0.0-1.0)
+    2 => uint64,                 ; Consecutive cycles active
+    3 => bytes .size 1952,       ; ML-DSA-65 public key
+    4 => bytes .size 32,         ; VRF public key (Ristretto255 point)
 }

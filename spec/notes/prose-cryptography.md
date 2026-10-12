@@ -1,169 +1,177 @@
 # 3CP Cryptography
 
 > **Document Level:** C — Protocol
->
 > **Classification:** Normative
->
 > **Status:** Draft
->
-> **Protocol Version:** 1
->
-> **Version:** 1.0
->
-> **Source**
-> - Specification: [`spec/3CP.md`](../../spec/3CP.md) §3
-> - Implementation: `gleipnir-ipc/pkg/identity/` (`dilithium.go`, `kyber.go`, `vrf.go`, `blake3.go`), `pkg/consensus/engine.go`
-> - Tests: `pkg/identity/*_test.go`, `pkg/identity/kyber_audit_test.go`
+> **Protocol Version:** 3
+> **Source:** [`spec/SPEC-3CP-V3.md`](../SPEC-3CP-V3.md) §3, §4
 
 ---
 
-Per `DOCUMENTATION_SPEC.md` §13, each cryptographic component below documents:
-algorithm, security assumptions, key lifecycle, inputs, outputs, failure
-conditions, complexity, and interoperability notes.
-
 ## Purpose
 
-Define the fixed cryptographic suite of 3CP v1 and its usage.
+Define the cryptographic suite of 3CP v3.0 and its usage.
 
 ## Scope
 
-The v1 suite: BLAKE3-256, SHA-256, Dilithium3 (ML-DSA-65), Kyber1024
-(ML-KEM-1024), ECVRF (Ristretto255), and canonical CBOR. ECVRF details are in
-[vrf](vrf.md); CBOR details in [protobuf](protobuf.md).
+The v3.0 suite: BLAKE3-256, SHA-256, ML-DSA-65 (FIPS 204), ML-KEM-1024
+(FIPS 203), ECVRF-RISTRETTO255-SHA512, ChaCha20-Poly1305 (RFC 8439),
+HKDF-SHA256 (RFC 5869), and canonical CBOR (RFC 8949).
 
-## Suite (v1, fixed)
+## Suite (v3.0, fixed)
 
-The v1 suite is fixed (spec §12.4): **Dilithium3, Kyber1024, Ristretto255
-ECVRF, BLAKE3-256, SHA-256.** Implementations MUST negotiate the suite at
-connection establishment; future versions MAY introduce new suites.
+**ML-DSA-65, ML-KEM-1024, ECVRF-RISTRETTO255-SHA512, BLAKE3-256, SHA-256,
+ChaCha20-Poly1305, HKDF-SHA256.**
+
+> **Correction from v2.0.** v2.0 specified a 2,700-byte "ML-DSA-65" signature
+> while citing FIPS 204. 2,700 bytes is the *round-3 draft* ML-DSA-65 value;
+> FIPS 204 Table 2 fixes ML-DSA-65 at **3,309 bytes**. Upstream PR #1 already
+> corrected the sizes in the v2 files; v3.0 additionally standardises the name
+> to **ML-DSA-65** everywhere FIPS 204 is cited, because the signature size is
+> baked into every CDDL `.size` constraint and the old value would have caused
+> every conformant verifier to reject every valid signature.
 
 ## 1. Hash Functions
 
 ### 1.1 BLAKE3-256
 
-- **Use:** all general hashing (SMT nodes, supervision root, identity digest,
-  contract binding) unless otherwise noted (spec §3.1).
+- **Use:** entry hashes, SMT leaves/nodes, state root, `NetworkID`.
 - **Output:** 32 bytes.
-- **Implementation:** `pkg/identity/blake3.go` (`Hash`, `Derive`); SMT in
-  `pkg/smt/smt.go`; supervision root in `pkg/state/root.go`.
-- **Domain separation:** SMT leaves use prefix `"leaf"` (spec §5.1;
-  `pkg/smt/smt.go`).
+- **Domain separation:** SMT preimages carry explicit tags — leaf
+  `BLAKE3-256("3CP-SMT-LEAF-v3" ‖ key ‖ value)`, node
+  `BLAKE3-256("3CP-SMT-NODE-v3" ‖ left ‖ right)`, empty
+  `BLAKE3-256("3CP-SMT-NODE-v3" ‖ E ‖ E)` with `E = BLAKE3-256("")`.
+
+> **Correction from v1.0/v2.0.** v1.0 used `BLAKE3("leaf" ‖ …)` and
+> `BLAKE3(left ‖ right)` with no separation. The three preimages are now
+> distinct by construction, removing second-preimage confusion between leaf,
+> node, and empty encodings.
 
 ### 1.2 SHA-256
 
-- **Use:** the block identifier `BlockHash` only (spec §3.2).
-- **Preimage (fixed-length binary):**
+- **Use:** the block identifier `BlockHash` only.
+- **Preimage (fixed-length, domain-separated):**
 
 ```
 BlockHash = SHA-256(
-    LE64(Index)       // 8 bytes little-endian
-  || PrevHash         // 32 bytes BLAKE3-256 of previous block (zeros for genesis)
-  || StateRoot        // 32 bytes SMT root
-  || Proposer         // 16 bytes RootID
-  || anchored[0].Hash // 32 bytes, first entry hash
-  || ...              // remaining entry hashes, each 32 bytes, in Anchored order
-  || LE64(Timestamp)  // 8 bytes UnixNano little-endian
+    "3CP-BLOCKHASH-v3"        // 17 ASCII bytes — domain tag (v3.0)
+  || LE64(Index)             // 8 bytes little-endian
+  || PrevHash                // 32 bytes
+  || StateRoot               // 32 bytes
+  || Proposer                // 16 bytes
+  || HashOfAnchoredEntries   // 32 bytes, BLAKE3-256 of canonical CBOR of key 5
+  || LE64(Timestamp)         // 8 bytes little-endian
+  || QuorumConfigCanonical   // canonical CBOR of key 10
 )
 ```
 
-- A conformant implementation MUST produce identical `BlockHash` for identical
-  block content. Entry hashes MUST appear in `Anchored` array order (spec §3.2).
-- **Implementation:** `computeBlockHash` in `pkg/consensus/engine.go`.
+A conformant implementation MUST produce identical `BlockHash` for identical
+block content. The `3CP-BLOCKHASH-v3` tag prevents cross-structure preimage
+reuse; the `NetworkID` binding prevents cross-chain replay.
 
-## 2. Post-Quantum Signatures — Dilithium3 (ML-DSA-65)
+### 1.3 Canonical CBOR floats
 
-| Parameter | Value |
-|-----------|-------|
-| Algorithm | ML-DSA-65 (Dilithium3) |
-| Public key | 1952 bytes |
-| Signature | 3309 bytes |
-| Security level | NIST Level 3 (AES-192 equivalent) |
+All CBOR floats MUST use the **shortest IEEE 754 form that round-trips**
+(RFC 8949 §4.2.1); NaN and Infinity are forbidden. `Lambda1`,
+`SeverityMin`, and `SeverityMax` are affected. v1.0/v2.0's fixed-64-bit rule is
+withdrawn — a fixed-width float produces non-canonical CBOR and therefore a
+different `BlockHash`.
 
-- **Use:** client authentication (`SubmitHash`), block proposer/validator
-  co-signatures, optional per-entry non-repudiation.
-- **Key lifecycle:** generated within UID0 (spec §8); private keys MUST NOT be
-  exported or transmitted (spec §8.2, keys 16/19). `WipeSecret` zeroes secret
-  material in `pkg/identity/dilithium.go`.
-- **Implementation:** `pkg/identity/dilithium.go`
-  (`GenerateDilithiumKey`, `SignDilithium`, `VerifyDilithium`) over
-  `circl/sign/dilithium/mode3`.
-- **Failure conditions:** signature verification failure → `INVALID_SIGNATURE`
-  (spec §7.2).
-
-## 3. Key Encapsulation — Kyber1024 (ML-KEM-1024)
+## 2. Digital Signatures — ML-DSA-65 (FIPS 204)
 
 | Parameter | Value |
-|-----------|-------|
-| Algorithm | ML-KEM-1024 (Kyber1024) |
-| Ciphertext | 1568 bytes |
+|---|---|
+| Algorithm | ML-DSA-65 |
+| Public key | 1,952 bytes |
+| Private key | 4,032 bytes |
+| **Signature** | **3,309 bytes** |
+| Security level | NIST category 3 (AES-192 equivalent) |
+
+- **Use:** block PREPARE and COMMIT signatures, key-rotation old/new signatures,
+  mandate signatures, optional per-entry non-repudiation.
+- **Key lifecycle:** private keys MUST NOT be exported or transmitted. Rotation
+  uses the dual old/new signature scheme to prove continuity of authority.
+- **Hedged signing:** signers SHOULD use the hedged (randomized) mode of
+  FIPS 204 §3.4 rather than the deterministic variant. Verifiers accept both.
+
+### 2.1 Failure conditions
+
+- Signature length ≠ 3,309 bytes → reject (`ErrInvalidSignatureLength`,
+  FIPS 204 §10.2).
+- Signature does not verify → `INVALID_SIGNATURE`.
+
+## 3. Key Encapsulation — ML-KEM-1024 (FIPS 203)
+
+| Parameter | Value |
+|---|---|
+| Algorithm | ML-KEM-1024 |
+| Public key | 1,568 bytes |
+| Ciphertext | 1,568 bytes |
 | Shared secret | 32 bytes |
-| Security level | NIST Level 5 |
+| Security level | NIST category 5 |
 
-- **Use:** peer-to-peer encrypted channels (spec §3.4).
-- **Implementation:** `pkg/identity/kyber.go`
-  (`KyberGenerateKey`, `KyberEncapsulate`, `KyberDecapsulate`) over
-  `circl/kem/schemes`; consumed by `pkg/transport/secure_conn.go` for the KEM
-  handshake, which derives a ChaCha20-Poly1305 AEAD key via HKDF-SHA256.
+- **Use:** peer-to-peer transport handshake only.
+- **Implicit rejection:** decapsulation uses FIPS 203 §7.3 implicit rejection —
+  a wrong ciphertext yields a pseudorandom secret, never a distinguishable
+  error.
 
-## 4. Verifiable Random Function — ECVRF (RFC 9381)
+## 4. Verifiable Random Function — ECVRF-RISTRETTO255-SHA512
 
-Summarised here; full detail in [vrf](vrf.md).
+- **Suite:** `ECVRF-RISTRETTO255-SHA512` (C2SP `vrf-r255`), realising the
+  RFC 9381 construction over the prime-order Ristretto255 group.
+- **Proof:** 96 bytes (`Gamma ‖ C ‖ S`); each part 32 bytes.
+- **Nonce:** `k_string = Hash(suite_string ‖ 0x81 ‖ int_to_string(SK,32) ‖ h_string)`,
+  `k = string_to_int(k_string) mod q` — every `Hash` is domain-separated.
 
-| Parameter | Value |
-|-----------|-------|
-| Curve | Ristretto255 |
-| Suite string | `ristretto255_XMD:SHA-512_R255MAP_RO_` |
-| Proof size | 96 bytes (`Gamma \|\| C \|\| S`) |
+> **Correction from v2.0.** v2.0 variously described the suite as
+> `ECVRF-EDWARDS25519-SHA512-Elligator2` (an edwards25519 suite, not Ristretto255)
+> or as a bespoke "2-point Elligator2 sum" matching no standard, with a
+> non-standard "HMAC-SHA512(sk) nonce". RFC 9380 §8.5 forbids the edwards25519
+> suites for hashing to ristretto255. v3.0 adopts the published `vrf-r255`
+> suite. Byte-exact vectors ship in [`spec/examples/vectors/`](../examples/vectors/).
 
-- **Use:** proposer selection — lowest `Gamma` (lexicographic) wins (spec §3.5,
-  §6.3.1).
-- **Implementation:** `pkg/identity/vrf.go`.
+## 5. AEAD — ChaCha20-Poly1305 (RFC 8439)
 
-> **Divergence:** the implementation's `HashToCurve` uses a custom two-point
-> Elligator2 sum rather than the literal RFC 9381 `hash_to_ristretto255`. See
-> [vrf](vrf.md) for the full analysis. Interoperability with a strictly
-> RFC-9381-conformant VRF is **not guaranteed**.
+Transport encryption after the KEM handshake. The 32-byte key is derived via
+HKDF-SHA256 from the ML-KEM shared secret. A (key, nonce) pair MUST NOT be
+reused (RFC 8439 §12).
 
-## 5. Canonical CBOR
+## 6. HKDF-SHA256 (RFC 5869)
 
-All CBOR structures use deterministic encoding (spec §3.6):
-
-- Integer map keys in ascending order
-- Smallest integer representation (`uint` ≤ 23 in one byte)
-- Definite-length strings and byte strings
-- 64-bit IEEE 754 floats
-
-Implementation: `pkg/identity/cbor.go` (`CanonicalEncOptions().EncMode()`).
+Key derivation for UID0 seeds (`L = 32`) and AEAD keys. The `L` parameter is
+always explicit; v2.0's unspecified-`L` call is withdrawn. Vector: RFC 5869
+Test Case 1 in [`spec/examples/test-vectors.md`](../examples/test-vectors.md).
 
 ## Complexity and Performance
 
 | Operation | Dominant cost | Notes |
 |-----------|---------------|-------|
-| Dilithium3 sign/verify | CPU | ~3309-byte signatures; hot path during co-signing |
-| Kyber1024 encaps/decaps | CPU | Handshake only |
+| ML-DSA-65 sign/verify | CPU | 3,309-byte signatures; hot path during co-signing |
+| ML-KEM-1024 encaps/decaps | CPU | Handshake only |
 | VRF prove/verify | CPU | Per cycle, per peer |
 | BLAKE3 | CPU/memory | SMT insert/verify (256-deep path) |
 
-Concrete measurements are not asserted here; see
-[Section 05 — Performance](../05-operations/performance.md). Any figure
-presented elsewhere as measured MUST be labelled per `DOCUMENTATION_SPEC.md` §21.
-
 ## Security Considerations
 
-- **Assets:** unforgeability of attribution (Dilithium3), confidentiality of
-  peer channels (Kyber1024), grinding resistance of proposer selection (ECVRF),
-  collision resistance of state (BLAKE3-256).
-- **Assumption failure:** if NIST Level 3 assumptions break, non-repudiation is
-  void; if BLAKE3 collision resistance breaks, SMT integrity is void.
+- **Assets:** unforgeability of attribution (ML-DSA-65), confidentiality of peer
+  channels (ML-KEM-1024 + ChaCha20-Poly1305), grinding resistance of proposer
+  selection (ECVRF-RISTRETTO255-SHA512), collision resistance of state
+  (BLAKE3-256).
+- **Assumption failure:** if ML-DSA-65 (cat. 3) assumptions break,
+  non-repudiation is void; if BLAKE3 collision resistance breaks, SMT integrity
+  is void.
 - **Custody:** all guarantees are void if signing keys are co-located with the
-  credentials they should constrain (spec §11.4).
+  credentials they constrain.
 
 ## References
 
-- [`spec/3CP.md`](../../spec/3CP.md) §3, §12.4
-- [vrf](vrf.md), [sparse-merkle-tree](sparse-merkle-tree.md),
-  [protobuf](protobuf.md)
-- [FIPS 205](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.205.pdf) (ML-DSA),
-  [FIPS 203](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.203.pdf) (ML-KEM),
-  [RFC 9381](https://tools.ietf.org/html/rfc9381) (VRF),
-  [BLAKE3](https://github.com/BLAKE3-team/BLAKE3)
+- [`spec/SPEC-3CP-V3.md`](../SPEC-3CP-V3.md) §3, §4, §17
+- [vrf](prose-vrf.md), [anchoring](prose-anchoring.md)
+- [FIPS 204](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.204.pdf) (ML-DSA),
+  [FIPS 203](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.203.pdf) (ML-KEM)
+- [RFC 9380](https://www.rfc-editor.org/rfc/rfc9380.html) (hashing to curves),
+  [RFC 9381](https://www.rfc-editor.org/rfc/rfc9381.html) (VRF),
+  [RFC 8439](https://www.rfc-editor.org/rfc/rfc8439.html) (ChaCha20-Poly1305),
+  [RFC 5869](https://www.rfc-editor.org/rfc/rfc5869.html) (HKDF),
+  [RFC 8949](https://www.rfc-editor.org/rfc/rfc8949.html) (CBOR)
+- [BLAKE3](https://github.com/BLAKE3-team/BLAKE3)

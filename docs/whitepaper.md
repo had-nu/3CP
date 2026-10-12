@@ -123,7 +123,7 @@ flowchart TD
 | **Estado** | Sparse Merkle Tree (depth 256) | Commitment compacto do estado. | [14](https://github.com/ethereum/eth2.0-specs) |
 | **Consenso** | BFT em 2 fases (PREPARE/COMMIT) + ECVRF | Tolerância a `f < N/3` falhas bizantinas. | [11](https://dl.acm.org/doi/10.1145/317636.317775) |
 | **Transporte** | gRPC/Protobuf | Comunicação entre nós. | [gRPC](https://grpc.io/) |
-| **Identidade** | UID0 (soulbound tokens) | Vínculo criptográfico com entidades legais. | [3CP Spec v2.0 §14](https://github.com/had-nu/3CP/blob/main/spec/SPEC-3CP-V2.md) |
+| **Identidade** | UID0 (soulbound tokens) | Vínculo criptográfico com entidades legais. | [3CP Spec v3.0 §11](https://github.com/had-nu/3CP/blob/main/spec/SPEC-3CP-V3.md) |
 
 ---
 
@@ -397,8 +397,8 @@ key-rotation-entry = {
     21 => bytes .size 32,    ; NewVRFPublicKey
     22 => uint64,            ; EffectiveCycle
     23 => uint64,            ; ExpiryCycle
-    24 => bytes .size 3309, ; SignatureOld (Dilithium3 com chave antiga)
-    25 => bytes .size 3309, ; SignatureNew (Dilithium3 com chave nova)
+    24 => bytes .size 3309, ; SignatureOld (ML-DSA-65 com chave antiga)
+    25 => bytes .size 3309, ; SignatureNew (ML-DSA-65 com chave nova)
 }
 ```
 

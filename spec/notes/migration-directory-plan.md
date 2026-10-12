@@ -1,8 +1,12 @@
 # Plano de Migração de Diretórios — v1.0 → v2.0
 
-> Extraído de `SPEC-3CP-V2.md` (era-of-authoring artefact — plano de tarefas para quem
-> aplicou a migração v1→v2 nos diretórios do repositório). Não é normativo do protocolo;
-> é registo de processo editorial, preservado aqui por rastreabilidade histórica.
+> **DOCUMENTO HISTÓRICO — NÃO NORMATIVO.**
+>
+> Registo de processo editorial da migração v1.0→v2.0, preservado por
+> rastreabilidade histórica. **Esta tarefa está concluída e superada pela v3.0.**
+> A especificação normativa actual é [`spec/SPEC-3CP-V3.md`](../SPEC-3CP-V3.md),
+> que consolidou as variantes v2 divergentes numa única V3. Não use este plano
+> para trabalho novo.
 
 # MODIFICAÇÕES NECESSÁRIAS NOS DIRETÓRIOS
 

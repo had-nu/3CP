@@ -56,13 +56,13 @@ Block {
   Lambda1:             0.28
   Timestamp:           1784030400000000000
   Reserved:            null                           ; Key 8 — RESERVED in v2.0
-  Validators:          [1 Dilithium3 public key, 1952 bytes]
+  Validators:          [1 ML-DSA-65 public key, 1952 bytes]
   Quorum:              {TotalValidators: 1, RequiredSigs: 1}
   BlockHash:           9034d8157f01e4c2f742a4b2584ad971d4b4463c95e3fd7832c33771cbe84bd1
   ProtocolVersion:     2                              ; Key 12
   PrepareSigsBitmap:   0x01                           ; Key 13 — bit 0 set (single validator)
-  PrepareSigsPayload:  [1 Dilithium3 signature, 3309 bytes] ; Key 14
-  CommitSig:           1 Dilithium3 signature, 3309 bytes       ; Key 15
+  PrepareSigsPayload:  [1 ML-DSA-65 signature, 3309 bytes] ; Key 14
+  CommitSig:           1 ML-DSA-65 signature, 3309 bytes       ; Key 15
   ExternalAnchors:     ["ipfs://QmGenesis...", "file:///var/3cp/blocks/0.cbor"] ; Key 16
   KeyRotationEpoch:    0                              ; Key 17
 }
@@ -228,7 +228,7 @@ MandateEntry {
       MaxDeferralSec:     0
   PolicyHash:   b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b
   PolicyURI:    "https://example.com/policies/cra-release-gate-v1.pdf"
-  Signature:    [3309-byte Dilithium3 signature]
+  Signature:    [3309-byte ML-DSA-65 signature]
 }
 ```
 
@@ -264,7 +264,7 @@ ProvenanceEntry {
   Label:     "3cp:mandate:v1"
   Approver:  4e4f44453030312d2d2d2d2d2d2d2d2d
   Reference: (absent)
-  Signature: 4e4f... (same Dilithium3 signature as MandateEntry.Signature)
+  Signature: 4e4f... (same ML-DSA-65 signature as MandateEntry.Signature)
   MandateRef: (absent — mandates are self-referential)
 }
 ```
@@ -307,7 +307,7 @@ Block {
 | 6 | Lambda1 | 0.42 | Fiedler eigenvalue |
 | 7 | Timestamp | 1784030403000000000 | UnixNano |
 | 8 | Reserved | null | MUST be null in v2.0 |
-| 9 | Validators | 4 × Dilithium3PK | Complete validator set |
+| 9 | Validators | 4 × ML-DSA-65PK | Complete validator set |
 | 10 | QuorumConfig | {Total: 4, Required: 3} | ceil(2×4/3) = 3 |
 | 11 | BlockHash | SHA-256 of preimage | Excludes keys 12-17 |
 | 12 | ProtocolVersion | 2 | v2.0 |
@@ -327,7 +327,7 @@ key-rotation-entry {
   1: h'val1------------',              ; Submitter (ValidatorID)
   2: 1784030400000000000,              ; Timestamp
   3: "3cp:key-rotation:v1",            ; Label
-  20: h'[1952-byte Dilithium3 PK]',    ; NewPublicKey
+  20: h'[1952-byte ML-DSA-65 PK]',    ; NewPublicKey
   21: h'[32-byte VRF PK]',             ; NewVRFPublicKey
   22: 15,                              ; EffectiveCycle
   23: 25,                              ; ExpiryCycle
@@ -338,7 +338,7 @@ key-rotation-entry {
 
 ### Validation Checklist
 
-- [ ] `SignatureOld` verifies against `val1`'s active Dilithium3PK at current cycle
+- [ ] `SignatureOld` verifies against `val1`'s active ML-DSA-65PK at current cycle
 - [ ] `SignatureNew` verifies against `NewPublicKey` (field 20)
 - [ ] `EffectiveCycle (15) >= currentCycle + KeyRotationLeadTime (default 10)`
 - [ ] `ExpiryCycle (25) >= EffectiveCycle + MinKeyOverlap (default 10)`
@@ -366,7 +366,7 @@ Given block `B` (index 1) and trusted `ValidatorSet_V` (obtained from Anchor Pub
 - All BLAKE3 hashes use BLAKE3-256 (32-byte output).
 - Timestamps are UnixNano (`time.UnixNano()`).
 - The genesis block uses single-node mode (QuorumConfig 1/1) for simplicity.
-- For multi-node, `PrepareSigsPayload` contains `ceil(2N/3)` × 3309-byte Dilithium3 signatures.
+- For multi-node, `PrepareSigsPayload` contains `ceil(2N/3)` × 3309-byte ML-DSA-65 signatures.
 - Binary values are hex-encoded. The canonical representation is raw bytes.
 - Key 8 is `null` in all v2.0 blocks; presence of non-null value MUST cause rejection.
 - `PrepareSigsBitmap` length matches `len(Validators)`; unused high-order bits MUST be zero.

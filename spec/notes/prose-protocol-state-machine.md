@@ -6,7 +6,7 @@
 >
 > **Status:** Draft
 >
-> **Protocol Version:** 1
+> **Protocol Version:** 3
 >
 > **Version:** 1.0
 >

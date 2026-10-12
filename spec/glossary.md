@@ -24,14 +24,15 @@ application-layer protocol, not a platform or blockchain.
 `ProvenanceEntry` values, a reference to the previous block, a state root,
 signatures, and metadata. One block is produced per consensus cycle.
 
-**BlockHash** — The SHA-256 identifier of a block, computed over a canonical
-preimage of the block's fields. Used for chain linking and signature targets.
+**BlockHash** — The SHA-256 identifier of a block, computed over a canonical,
+domain-separated preimage beginning with the ASCII tag `3CP-BLOCKHASH-v3` and
+binding the `NetworkID`. Used for chain linking and signature targets.
 
 ## C
 
-**Canonical CBOR** — Deterministic CBOR encoding as specified by CDDL. Integer
-keys in ascending order, smallest integer representation, definite-length
-strings.
+**Canonical CBOR** — Deterministic CBOR encoding per RFC 8949 §4.2.1. Map keys
+sorted by encoded bytes, shortest integer representation, definite-length
+strings, and **shortest round-trip floating-point** (NaN/Infinity forbidden).
 
 **Compliance gap** — An event that should exist in the chain per an active
 mandate but does not, or exists without the required fields (see [Mandate]).
@@ -41,7 +42,7 @@ Detected by comparing the mandate's rules against the chain at verification time
 custody, control, transfer, analysis, and disposition of digital evidence. 3CP
 produces cryptographic chain-of-custody evidence.
 
-**CommitSig** — The leader's Dilithium3 signature over the final block hash,
+**CommitSig** — The leader's ML-DSA-65 signature over the final block hash,
 including the PREPARE quorum evidence. Introduced in protocol v2.0.
 
 **Contestability** — The property that evidence can be challenged, but the
@@ -57,14 +58,16 @@ a sub-chain AND that the sub-chain root was anchored in the parent chain.
 
 ## D
 
-**Dilithium3** — ML-DSA-65, a NIST-standardized post-quantum digital signature
-algorithm. Security level: NIST Level 3 (AES-192 equivalent). Signature size:
-3309 bytes.
+**ML-DSA-65** — A NIST-standardized post-quantum digital signature algorithm
+(FIPS 204). Security level: NIST category 3 (AES-192 equivalent). Signature
+size: **3,309 bytes**; public key 1,952 bytes. (3CP v1/v2 called this
+"Dilithium3" at 2,700 bytes — the round-3 draft value; corrected in v3.0.)
 
 ## E
 
 **ECVRF** — Elliptic Curve Verifiable Random Function, as specified in RFC 9381.
-Used by 3CP for leader election. Implemented over Ristretto255.
+Used by 3CP for leader election. 3CP uses the `ECVRF-RISTRETTO255-SHA512`
+suite (C2SP `vrf-r255`) over the prime-order Ristretto255 group; proof 96 bytes.
 
 **Entry** — See ProvenanceEntry.
 
@@ -76,7 +79,7 @@ that block is final. No forks, no rollbacks, no reorganization.
 ## G
 
 **GenesisValidatorSet** — The initial set of validators declared in the genesis
-block, containing each validator's ValidatorID, Dilithium3PK, and VRFPK.
+block, containing each validator's ValidatorID, ML-DSA-65 public key, and VRF public key.
 Immutable after genesis.
 
 **gRPC** — The canonical transport for the 3CP wire protocol. Conformant
@@ -103,7 +106,7 @@ without executing consensus or maintaining full network state.
 ## M
 
 **Mandate** — A signed, versioned, anchored declaration defining which event
-classes require anchoring under which conditions. A Mandate is itself a
+classes require anchoring under which conditions (spec §13). A Mandate is itself a
 `ProvenanceEntry` with a special label and a `MandateEntry` CBOR payload.
 Mandates are the protocol-native mechanism for making anchoring obligations
 verifiable by independent third parties. See [§13](3CP.md#13-mandates).
@@ -133,7 +136,7 @@ light clients and auditors can access the chain without relying on validator
 node availability.
 
 **Non-repudiation** — A cryptographic guarantee that a party cannot deny having
-submitted a specific entry. In 3CP, achieved via Dilithium3 signatures on both
+submitted a specific entry. In 3CP, achieved via ML-DSA-65 signatures on both
 block-level and entry-level payloads.
 
 ## P

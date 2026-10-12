@@ -6,7 +6,7 @@
 >
 > **Status:** Draft
 >
-> **Protocol Version:** 1
+> **Protocol Version:** 3
 >
 > **Version:** 1.0
 >
@@ -87,7 +87,7 @@ The proposer:
 3. Inserts `(Hash, Hash)` into the SMT for each entry.
 4. Computes `StateRoot`.
 5. Computes `BlockHash` ([cryptography](cryptography.md) §1.2).
-6. Signs `BlockHash` with its Dilithium3 private key.
+6. Signs `BlockHash` with its ML-DSA-65 private key.
 7. Broadcasts block + signature.
 
 ### 3. Non-Proposer Verification (spec §6.3.3)

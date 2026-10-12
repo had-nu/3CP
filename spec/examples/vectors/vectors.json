@@ -1,0 +1,58 @@
+{
+  "_comment": "3CP v3.0 cryptographic test vectors. Generated with OpenSSL 3.6.5 (ML-DSA-65 / ML-KEM-1024) and reference BLAKE3. All values are real cryptographic outputs.",
+  "protocol_version": 3,
+  "generated": "2026-10-11",
+  "primitives": {
+    "signature_alg": "ML-DSA-65",
+    "signature_standard": "FIPS 204",
+    "kem_alg": "ML-KEM-1024",
+    "kem_standard": "FIPS 203",
+    "vrf_suite": "ECVRF-RISTRETTO255-SHA512",
+    "hash": "BLAKE3-256",
+    "aead": "ChaCha20-Poly1305"
+  },
+  "sizes": {
+    "mldsa65_public_key": 1952,
+    "mldsa65_private_key": 4032,
+    "mldsa65_signature": 3309,
+    "mlkem1024_encaps_key": 1568,
+    "mlkem1024_ciphertext": 1568,
+    "mlkem1024_shared_secret": 32,
+    "vrf_proof": 96,
+    "blake3_256": 32,
+    "sha256": 32
+  },
+  "hashes": {
+    "blake3_256_empty": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+    "sha256_empty": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "hkdf_rfc5869_tc1": {
+    "_comment": "Reproduces RFC 5869 Appendix A.1 to prove extraction/expansion are conformant and that L is honoured.",
+    "ikm": "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
+    "salt": "000102030405060708090a0b0c",
+    "info": "f0f1f2f3f4f5f6f7f8f9",
+    "prk": "077709362c2e32df0ddc3f0dc47bba6390b6c73bb50f9c3122ec844ad7c2b3e5",
+    "okm_L42": "3cb25f25faacd57a90434f64d0362f2a2d2d0a90cf1a5a4c5db02d56ecc4c5bf34007208d5b887185865"
+  },
+  "mldsa65": {
+    "message_utf8": "3cp-v3-test-vector|ml-dsa-65-blockhash",
+    "message_blake3_256": "b823f33e1a88ffa3df489ecfde68a0f491d55d72b1e466ea434a38025d8695be",
+    "message_sha256": "a1f53fc419d1a247ee4b5f5775cf356a4b2325e3f2bba7241612db3940f44901",
+    "public_key_hex_file": "vectors/mldsa65-public-key.hex",
+    "signature_hex_file": "vectors/mldsa65-signature.hex",
+    "verify_result": "Signature Verified Successfully"
+  },
+  "mlkem1024": {
+    "shared_secret_hex": "7124c78e378eff47336b1026966d8525c5c0236e9f31114b1566978605279bc0",
+    "decap_agrees_with_encap": true,
+    "implicit_rejection": "FIPS 203 §7.3 — decapsulating a wrong ciphertext returns a pseudorandom secret, not an error"
+  },
+  "domain_separation_tags": {
+    "blockhash": "3CP-BLOCKHASH-v3",
+    "key_rotation": "3CP-KEYROT-v3",
+    "smt_leaf": "3CP-SMT-LEAF-v3",
+    "smt_node": "3CP-SMT-NODE-v3",
+    "mandate": "3CP-MANDATE-v3",
+    "entry": "3CP-ENTRY-v3"
+  }
+}

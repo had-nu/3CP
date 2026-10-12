@@ -29,7 +29,7 @@ Block {
 ### ValidatorSet (Cycle 5)
 
 ```
-[val0, val1, val2, val3] with Dilithium3PKs matching block key 9.
+[val0, val1, val2, val3] with ML-DSA-65PKs matching block key 9.
 ```
 
 ### Light Client Verification
